@@ -26,7 +26,7 @@ If[Length[args] < 2,
   prn["USAGE: ",args[[1]]," name_of_ledger"];
   Exit[1]];
 ledg = args[[2]]; (* the name of the ledger to process *)
-lsource = "http://pad.beeminder.com/yl-"<>ledg<>"/export/txt";
+lsource = "http://insecure.padm.us/yl-"<>ledg<>"/export/txt";
 lsnap = "yoodat/"<>ledg<>"-snapshot.txt"; (* snapshot of the ledger source *)
 outFile = "yoodat/"<>ledg<>"-balances.txt";  (* table that shows the balances *)
 csvFile = "yoodat/"<>ledg<>"-transactions.csv";
@@ -457,11 +457,16 @@ wages[hours_, frm_, to_, startdate_, why_, hourlyrate_,
    actual ledgers so we'll do it here.  It's on the magical side, yes. *)
 SetAttributes[{i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, io}, HoldAll];
 
+SetAtributes[hoursminder, HoldAll];
+hoursminder[yoog_, hourlyrate_, frm_, to_] :=
+  iou[hourlyrate*10, frm, to, td@fd[{2015,05,26}], "hoursminder test"]
+
 
 (**************************** MAIN **********************************)
 
 preguts = If[FileExistsQ[secretFile], Import[secretFile, "Text"], ""];
 theguts = Import[lsource, "Text"];
+theguts = StringReplace[theguts, "<script>" -> "<spamscript3>"];
 snapStr = OpenWrite[lsnap]; WriteString[snapStr, theguts]; Close[snapStr];
 theguts = StringReplace[preguts <> theguts,       (* see the parse[] function *)
   re@"(\\d{2,4})\\.(\\d{1,2})\\.(\\d{1,2})" -> "{$1,$2,$3}"];   (* bookmark01 *)

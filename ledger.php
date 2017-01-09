@@ -1,6 +1,8 @@
 <?php 
 $ledg = $_REQUEST['ledg'];
-$padurl = "http://pad.beeminder.com/yl-$ledg?useMonospaceFont=true&showControls=false&showChat=false&showLineNumbers=true";
+#$padopts = 
+#  "showControls=false&showChat=false&showLineNumbers=true"
+$padurl = "https:/padm.us/yl-$ledg?showControls=false";
 $snap = file_exists("data/$ledg-snapshot.txt");
 $balfile = "data/$ledg-balances.txt";
 
@@ -33,7 +35,8 @@ _END;
 
 if(!$snap) {
   echo <<<_END
-<h3>To create a ledger here, paste into the etherpad the template for the ledger below. 
+<h3>To create a ledger here, paste into the etherpad the template for the ledger
+below. 
 Then click "Refresh Balances" above.</h3>
 _END;
 } elseif(!file_exists($balfile) || !is_readable($balfile)) {
