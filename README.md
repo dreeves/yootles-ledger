@@ -10,3 +10,11 @@ Bethany Soule and I originally wrote this in Scheme around 2005:
 ; date is a 3 element list of numbers (year month day)
 ; description is a string
 </pre>
+
+Cron entries for updating every user's personal transaction histories nightly:
+
+<pre>
+00 6 * * * $HOME/prj/yootles/fetchlist.m
+05 6 * * * $HOME/prj/yootles/nightly.m
+</pre>
+

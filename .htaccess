@@ -1,0 +1,53 @@
+<IfModule mod_mime.c>
+AddType text/plain .2
+</IfModule>
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+
+# If the filename's not found, try adding .php
+#RewriteCond %{REQUEST_FILENAME} !-f
+#RewriteCond %{REQUEST_FILENAME} !-d
+#RewriteRule ^(.+)$ $1.php [QSA,L]
+
+# look in /data for .csv files if they're not found.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^/]+)\.csv$ data/$1.csv [NC,L]
+
+# foo-transactions.html really lives in /data
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^/]+\-transactions\.html)$ data/$1 [NC,L]
+
+# foo/transactions -> data/foo-transactions.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^/]+)/transactions/?$ data/$1-transactions.html [NC,L]
+
+# foo/fullscreen -> padm.us/yl-foo?fullScreen=1
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^/]+)/fullscreen/?$ http://insecure.padm.us/yl-$1?fullScreen=1 [NC,L]
+
+# problem with extra trailing slashes; this seems to solve it.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)/+$ $1 [R]
+
+# If yootles.com/foo doesn't exist, do yootles.com/ledger.php?ledger=foo
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^/\.]+)/*$ ledger.php?ledg=$1 [NC,L]
+
+# Old url scheme for ledgers, yootles.com/ledger/foo to yootles.com/foo
+RewriteRule ^ledger/(.*)/*$ $1 [R,NC,L]
+
+# yootles.com/foo/alice -> yootles.com/data/foo-alice.txt
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^/\.]+)/([^/\.]+)/?$  data/$1-$2.txt [NC,L]
+
+</IfModule>
+
