@@ -1,5 +1,5 @@
 #!/usr/bin/env mash
-(* svn/yootles/mma/ledger.m -- Daniel Reeves, 2006 June
+(* Daniel Reeves, 2006 June
    This is the heart of the ledger program.
    It reads the raw text of a ledger (the name of the ledger is given as a 
      command line parameter) and computes balances and an atomized list of 
@@ -27,10 +27,10 @@ If[Length[args] < 2,
   Exit[1]];
 ledg = args[[2]]; (* the name of the ledger to process *)
 lsource = "http://insecure.padm.us/yl-"<>ledg<>"/export/txt";
-lsnap = "yoodat/"<>ledg<>"-snapshot.txt"; (* snapshot of the ledger source *)
+lsnap   = "yoodat/"<>ledg<>"-snapshot.txt";  (* snapshot of the ledger source *)
 outFile = "yoodat/"<>ledg<>"-balances.txt";  (* table that shows the balances *)
 csvFile = "yoodat/"<>ledg<>"-transactions.csv";
-htmlFile = "yoodat/"<>ledg<>"-transactions.html";
+htmlFile   = "yoodat/"<>ledg<>"-transactions.html";
 secretFile = "yoodat/"<>ledg<>"-secret.m";
 netbalFile = "yoodat/netbal.mma"; (* net balances across all ledgers *)
 
@@ -151,7 +151,7 @@ Today[] = fd@Take[td@start,3];  (* keep this for backwards compatibility *)
 TODAY = fd@Take[td@start,3];  (* noon today *)
 LAST = {};
 
-(* Official version of this is now on padm.us/mma *)
+(* Official version of this is now on mma pad *)
 (* Returns, as a date, x (given as either timestamp or date) plus amount of 
    time d (given in the specified units).  If the unit is "month" then,
    for example {2008,2,1,12,00} plus one month yields {2008,3,1,12,00}, ie, 
@@ -160,9 +160,9 @@ LAST = {};
    specify d as like 3.0 instead of 3 the integer. *) 
 dPlus[x_, d_] := td[fd@x + d]
 dPlus[x_, d_, "second"] := dPlus[x, d]
-dPlus[x_, d_, "day"] := dPlus[x, d*secs@"day"]
-dPlus[x_, d_, "week"] := dPlus[x, d*secs["day"]*7]
-dPlus[x_, d_, "month"] := dPlus[x, d*secs["year"]/12]
+dPlus[x_, d_, "day"]    := dPlus[x, d*secs["day"]]
+dPlus[x_, d_, "week"]   := dPlus[x, d*secs["day"]*7]
+dPlus[x_, d_, "month"]  := dPlus[x, d*secs["year"]/12]
   
 dPlus[x_?NumberQ, d_Integer, "month"] := Module[{x0 = td@x, y, m, rest},
   {y, m} = Take[x0, 2];  rest = Drop[x0, 2];

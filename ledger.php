@@ -2,7 +2,7 @@
 $ledg = $_REQUEST['ledg'];
 #$padopts = 
 #  "showControls=false&showChat=false&showLineNumbers=true"
-$padurl = "https:/padm.us/yl-$ledg?showControls=false";
+$padurl = "https://padm.us/yl-$ledg"; #?showControls=false";
 $snap = file_exists("data/$ledg-snapshot.txt");
 $balfile = "data/$ledg-balances.txt";
 
