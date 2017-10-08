@@ -148,7 +148,6 @@ td[x_]          := x;  (* if it's already a date, leave it *)
 (* Note: to fill in the defaults for a date, eg, {2007,9} -> 
    {2007,9,15,12,0,0} use td@fd[{2007,9}]. *)
 
-Today[] = fd@Take[td@start,3];  (* keep this for backwards compatibility *)
 TODAY   = fd@Take[td@start,3];  (* noon today *)
 LAST    = {};
 

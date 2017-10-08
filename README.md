@@ -2,6 +2,7 @@
 
 The good old Yootles ledgers.
 Bethany Soule and I originally wrote this in Scheme around 2005:
+We continue to use it extensively for friends&family accounting and loans.
 
 <pre>
 ; Financial Ledger is a list of transactions where each transaction is a
