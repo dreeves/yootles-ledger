@@ -25,22 +25,23 @@ start = AbsoluteTime[];
 If[Length[args] < 2,
   prn["USAGE: ",args[[1]]," name_of_ledger"];
   Exit[1]];
-ledg = args[[2]]; (* the name of the ledger to process *)
-lsource = "http://insecure.padm.us/yl-"<>ledg<>"/export/txt";
-lsnap   = "yoodat/"<>ledg<>"-snapshot.txt";  (* snapshot of the ledger source *)
-outFile = "yoodat/"<>ledg<>"-balances.txt";  (* table that shows the balances *)
-csvFile = "yoodat/"<>ledg<>"-transactions.csv";
-htmlFile   = "yoodat/"<>ledg<>"-transactions.html";
-secretFile = "yoodat/"<>ledg<>"-secret.m";
-netbalFile = "yoodat/netbal.mma"; (* net balances across all ledgers *)
+ledg       = args[[2]]; (* the name of the ledger to process *)
+lpath      = "yoodat/";
+lsrc       = "http://insecure.padm.us/yl-"<>ledg<>"/export/txt";
+snapFile   = lpath<>ledg<>"-snapshot.txt";  (* snapshot of the ledger source *)
+outFile    = lpath<>ledg<>"-balances.txt";  (* table that shows the balances *)
+csvFile    = lpath<>ledg<>"-transactions.csv";
+htmlFile   = lpath<>ledg<>"-transactions.html";
+secretFile = lpath<>ledg<>"-secret.m";
+netbalFile = lpath<>"netbal.mma"; (* net balances across all ledgers *)
 
 secs["second"] = 1;
 secs["minute"] = 60;
-secs["hour"] =   3600;
-secs["day"] =    24*secs["hour"];
-secs["week"] =   7*secs["day"];
-secs["year"] =   365.25*secs["day"]; 
-secs["month"] =  secs["year"]/12;
+secs["hour"]   = 3600;
+secs["day"]    = 24*secs["hour"];
+secs["week"]   = 7*secs["day"];
+secs["year"]   = 365.25*secs["day"]; 
+secs["month"]  = secs["year"]/12;
 (* Average length of a calendar year is 365.2425 days but the standard 
    definition of "a year" is a Julian year: 365.25 days.  That happens to be
    the average calendar year length for time periods between the years 2000 
@@ -142,14 +143,14 @@ fd[x_] := x;  (* if it's already in absolute seconds, leave it *)
 
 (* Convert from absolute seconds to date *)
 td[x_?NumericQ] := ToDate[x]
-td[x_] := x;  (* if it's already a date, leave it *)
+td[x_]          := x;  (* if it's already a date, leave it *)
 
 (* Note: to fill in the defaults for a date, eg, {2007,9} -> 
    {2007,9,15,12,0,0} use td@fd[{2007,9}]. *)
 
 Today[] = fd@Take[td@start,3];  (* keep this for backwards compatibility *)
-TODAY = fd@Take[td@start,3];  (* noon today *)
-LAST = {};
+TODAY   = fd@Take[td@start,3];  (* noon today *)
+LAST    = {};
 
 (* Official version of this is now on mma pad *)
 (* Returns, as a date, x (given as either timestamp or date) plus amount of 
@@ -158,7 +159,7 @@ LAST = {};
    the common meaning of adding an integer number of months to a date.
    Similarly for adding an integer number of years.  If you don't want that,
    specify d as like 3.0 instead of 3 the integer. *) 
-dPlus[x_, d_] := td[fd@x + d]
+dPlus[x_, d_]           := td[fd@x + d]
 dPlus[x_, d_, "second"] := dPlus[x, d]
 dPlus[x_, d_, "day"]    := dPlus[x, d*secs["day"]]
 dPlus[x_, d_, "week"]   := dPlus[x, d*secs["day"]*7]
@@ -177,20 +178,19 @@ repeatBrute[a_,b_,r_, u_] := Most[NestWhileList[dPlus[#,r,u]&, a, fd@#<=fd@b&]]
 
 (* A list of dates starting with date a and repeating every r amount of time
    (measured in units ru), not exceeding date b. *)
-repeat[a_,b_,r_, u_] := td /@ Range[fd@a, fd@b, r*secs@u]
+repeat[a_,b_,r_, u_]      := td /@ Range[fd@a, fd@b, r*secs@u]
 repeat[a_,b_,r_, "month"] := repeatBrute[a,b,r,"month"]
-repeat[a_,b_,r_, "year"] := repeatBrute[a,b,r,"year"]
+repeat[a_,b_,r_, "year"]  := repeatBrute[a,b,r,"year"]
   
 (* Takes an element x and a sorted list, 
    returns the biggest element of list strictly less than x. *)
-pigeon[x_, {}] := Null
-pigeon[x_, {a_}] := If[x<=a, Null, a]
+pigeon[x_, {}]           := Null
+pigeon[x_, {a_}]         := If[x<=a, Null, a]
 pigeon[x_, {a_,b_,c___}] := If[x<=a, Null, If[x<=b, a, pigeon[x,{b,c}]]]
 
 (* The interest on principle p at annual rate r, compounded n times per year
    over time t (in years). *)
-interest[p_,r_,t_,n_:Infinity] := 
-  p * If[n==Infinity, Exp[r*t]-1, (1+r/n)^(n*t)-1]
+pert[p_,r_,t_,n_:Infinity] := p * If[n==Infinity, Exp[r*t]-1, (1+r/n)^(n*t)-1]
 
 (* Interest rate as a function of timestamp instead of date. 
    ird is a global variable, computed from the domain of irate in crunch[]. *)
@@ -299,7 +299,7 @@ crunch[] := Module[{trans,ntrans,dtrans, last,dummydates,ii,srtfun,ledglist},
     If[balance[to] > -negThresh, lastpos[to] = t];
     cum = {}; 
     each[a_, Select[keys[balance], # =!= Blank[]&],
-      ii = interest[balance[a],irt[t],(t-last)/secs["year"],compound];
+      ii = pert[balance[a],irt[t],(t-last)/secs["year"],compound];
       balance[a] += ii;  intRcvd[a] += ii;
       AppendTo[cum, {a, balance[a]}];
     ];
@@ -413,11 +413,12 @@ iou[OptionsPattern[]] := Module[{o},
   AppendTo[rawdata, {o@amt, o@frm, o@to, parse[OptionValue@when], o@why, 
                      o@rpt, o@ru, parse[OptionValue@til], o@grp, o@cur, o@id}];
   0]
-iou[x_, opts:OptionsPattern[]] := iou[amt->x, opts]
-iou[x_,a_,b_, opts:OptionsPattern[]] := iou[x, frm->a, to->b, opts]
-iou[x_,a_,b_,d_, opts:OptionsPattern[]] := iou[x, a, b, when->d, opts]
+iou[x_,             opts:OptionsPattern[]] := iou[amt->x, opts]
+iou[x_,a_,b_,       opts:OptionsPattern[]] := iou[x, frm->a, to->b, opts]
+iou[x_,a_,b_,d_,    opts:OptionsPattern[]] := iou[x, a, b, when->d, opts]
 iou[x_,a_,b_,d_,c_, opts:OptionsPattern[]] := iou[x, a, b, d, why->c, opts]
-iou[___] := prn["ERROR iou-rpt: please tell dreeves@yootles.com <br>"]
+iou[___] := prn["ERROR iou-rpt: please tell dreeves <br>"]
+
 IOU = iou;   (* an alias for iou *)
 
 (* Converts a time range like tr[120,240] into a number of hours like 1.333 *)
@@ -465,9 +466,9 @@ hoursminder[yoog_, hourlyrate_, frm_, to_] :=
 (**************************** MAIN **********************************)
 
 preguts = If[FileExistsQ[secretFile], Import[secretFile, "Text"], ""];
-theguts = Import[lsource, "Text"];
+theguts = Import[lsrc, "Text"];
 theguts = StringReplace[theguts, "<script>" -> "<spamscript3>"];
-snapStr = OpenWrite[lsnap]; WriteString[snapStr, theguts]; Close[snapStr];
+snapStr = OpenWrite[snapFile]; WriteString[snapStr, theguts]; Close[snapStr];
 theguts = StringReplace[preguts <> theguts,       (* see the parse[] function *)
   re@"(\\d{2,4})\\.(\\d{1,2})\\.(\\d{1,2})" -> "{$1,$2,$3}"];   (* bookmark01 *)
 
