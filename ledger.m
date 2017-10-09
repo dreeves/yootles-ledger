@@ -10,13 +10,22 @@
    It creates (or overwrites) multiple files, also specified in CONSTANTS,
    which show balances and lists of transactions in both html and csv.
    It also writes to stdout.
-   Anything that should be evaluated as part of the ledger but that shouldn't
+   (Anything that should be evaluated as part of the ledger but that shouldn't
    be shown on the public ledger itself can go in a secret file, also 
    specified in CONSTANTS, which gets eval'd before the ledger contents.
+   PS: That was a dumb idea and basically never used.)
    The web interface appends the stdout from this program to the 
    contents of outFile and displays that on the main page for the ledger.
    Note that the stdout from this program can include print statements 
    in the ledger contents itself (since it's eval'd).
+
+   Special syntax and macros:
+   * YYYY.MM.DD dates are globally macro-expaneded to Mathematica's {YYYY,MM,DD}
+     syntax by a pre-processor
+   * TODAY is a macro for today's date
+   * LAST is the last logged transaction or today, whichever's later
+   * iou or IOU
+   * iouDaily, iouWeekly, iouBiweekly, iouMonthly, iouYearly
 *)
 
 (*************************** CONSTANTS ***********************************)
@@ -53,7 +62,7 @@ df = {"Year","-","Month","-","Day"};            (* date format *)
 
 (********************* DEFAULT PARAMETER SETTINGS ************************)
 
-irate[{1970,1,1}] = .05375;  (* Default interest rate is 5.375%. *)
+irate[{1970,1,1}] = .05375;  (* Historical default interest rate = 5.375%. *)
 compound = Infinity;  (* How many times to compound interest per year. *)
 
 (* Being < this much in debt doesn't count as being negative. *)
@@ -148,8 +157,8 @@ td[x_]          := x;  (* if it's already a date, leave it *)
 (* Note: to fill in the defaults for a date, eg, {2007,9} -> 
    {2007,9,15,12,0,0} use td@fd[{2007,9}]. *)
 
-TODAY   = fd@Take[td@start,3];  (* noon today *)
-LAST    = {};
+TODAY = fd@Take[td@start,3];  (* noon today *)
+LAST = INDEFINITE = {};
 
 (* Official version of this is now on mma pad *)
 (* Returns, as a date, x (given as either timestamp or date) plus amount of 
@@ -245,9 +254,9 @@ atomize[{x_, a_, b_Plus, stuff___}] := Module[{accts, coeffs, nrml},
 
 atomize[{x_,a_Symbol,b_Symbol,d_,c_,rpt_,ru_,til_,s___}] := Module[{e,l,ld},
   If[rpt<0, {{x,a,b,d,c}},
-    e = If[til===-1, asOf, fd@til];
+    e = If[til===-1 || til==={}, asOf, fd@til];
     l = MapIndexed[{x,a,b,#1,cat["[",#2[[1]],"] ",c]}&, repeat[d,e,rpt,ru]];
-    If[til===-1, l, 
+    If[til===-1 || til==={}, l, 
       ld = l[[-1,4]];  (* last date of repeating payment *)
       Append[Most@l, {x*(e-fd@ld)/(fd@dPlus[ld,rpt,ru]-fd@ld), a, b, ld, 
                       cat["[",Length@l,",prorated] ",c]}]]]]
@@ -382,7 +391,9 @@ slashy[a__, pow[b_,-1]] := Flatten@{a, b}
 SetAttributes[parse, HoldAll];
 parse[x_] := Unevaluated[x] /. {Plus->dashy, Times->slashy, Power->pow}
 
-(* iou appends a transaction (or many repeating transactions) to rawdata.
+(* Legacy version of the iou function with amount, from, to, date, comment
+   instead of date, amount, from to, comment.
+   Appends a transaction (or many repeating transactions) to rawdata.
    amt:  amount to transfer (if negative same as swapping frm & to);
    frm:  the accounts issuing the IOU;
    to:   the accounts receiving the IOU;
@@ -398,27 +409,33 @@ parse[x_] := Unevaluated[x] /. {Plus->dashy, Times->slashy, Power->pow}
    grp:  the name of the ledger;
    cur:  currency (default: "ytl");
    id:   the ID of the IOU in the Yootles system; *)
-SetAttributes[iou, HoldAll];  (* needed for handling dates like 2009-9-1 *)
-Options[iou] = {amt->Null, frm->Null, to->Null, when->Null, why->"",
-                rpt->-1, ru->"", til->-1,   grp->ledg, cur->ytl, id->-1
-};
-iou[OptionsPattern[]] := Module[{o},
+SetAttributes[iouLeg, HoldAll];
+Options[iouLeg] = {amt->Null, frm->Null, to->Null, when->Null, why->"",
+                      rpt->-1, ru->"", til->-1,   grp->ledg, cur->ytl, id->-1 };
+iouLeg[OptionsPattern[]] := Module[{o},
   o[x___] := OptionValue[x];
   If[StringQ[o@rpt] && o@ru === "", {o@rpt, o@ru} = First[
     StringReplace[o@rpt, re@"^([\\d\\.]*)\\s*(\\w*?)s?\\s*$"->{"$1","$2"}]]];
   If[StringQ[o@rpt], o@rpt = Replace[eval[o@rpt], Null->1]];
-  (* TODO: switch to Sow and Flatten[Reap[eval[ledger]][[2]],1] *)
+  (* More efficient would be Sow and then Flatten[Reap[eval[ledger]][[2]],1] *)
   (* NB: parse[o@when] doesn't work for hard-to-explain HoldForm-type reasons *)
   AppendTo[rawdata, {o@amt, o@frm, o@to, parse[OptionValue@when], o@why, 
                      o@rpt, o@ru, parse[OptionValue@til], o@grp, o@cur, o@id}];
   0]
-iou[x_,             opts:OptionsPattern[]] := iou[amt->x, opts]
-iou[x_,a_,b_,       opts:OptionsPattern[]] := iou[x, frm->a, to->b, opts]
-iou[x_,a_,b_,d_,    opts:OptionsPattern[]] := iou[x, a, b, when->d, opts]
-iou[x_,a_,b_,d_,c_, opts:OptionsPattern[]] := iou[x, a, b, d, why->c, opts]
-iou[___] := prn["ERROR iou-rpt: please tell dreeves <br>"]
+iouLeg[x_,             o:OptionsPattern[]] := iouLeg[amt->x, o]
+iouLeg[x_,a_,b_,       o:OptionsPattern[]] := iouLeg[x, frm->a, to->b, o]
+iouLeg[x_,a_,b_,d_,    o:OptionsPattern[]] := iouLeg[x, a, b, when->d, o]
+iouLeg[x_,a_,b_,d_,c_, o:OptionsPattern[]] := iouLeg[x, a, b, d, why->c, o]
+iouLeg[___] := prn["ERROR iou-rpt: please tell dreeves <br>"]
 
 IOU = iou;   (* an alias for iou *)
+iou[amt_?NumericQ, rest___] := iouLeg[amt, rest]
+iou[when_, amt_, frm_, to_, why_] := iouLeg[amt, frm, to, when, why]
+iouDaily[s_,e_,x_,f_,t_,c_]  := iouLeg[x, f, t, s, c, rpt->"day", til->e]
+iouWeekly[s_,e_,x_,f_,t_,c_] := iouLeg[x, f, t, s, c, rpt->"week", til->e]
+iouBiweekly[s_,e_,x_,f_,t_,c_] := iouLeg[x,f,t,s, c, rpt->"2week", til->e]
+iouMonthly[s_,e_,x_,f_,t_,c_] := iouLeg[x, f, t, s, c, rpt->"month", til->e]
+iouYearly[s_,e_,x_,f_,t_,c_] := iouLeg[x, f, t, s, c, rpt->"year", til->e]
 
 (* Converts a time range like tr[120,240] into a number of hours like 1.333 *)
 tr[a_, b_] := Quotient[b,100] + Mod[b,100]/60 - Quotient[a,100] - Mod[a,100]/60
@@ -494,7 +511,8 @@ intRcvd[TOT] = Total[intRcvd/@accounts];
 name[TOT] = "[Totals]";
 prout["<pre>\n",
   "AS OF ", DateString[asOf, df], " ", cat@@Table["-", {48}], " fresh@", 
-  DateString[start, {"Time"}], "\n",
+  (* timezone hack cuz server is eastern time but soule-reeveses are pacific: *)
+  DateString[start - 3*3600, {"Time"}], "\n",
   "Balances, Interest earned, Net across ledgers, Change since last refresh\n", 
   cat@@Table["-", {80}], "\n",
   table[labelTable[
