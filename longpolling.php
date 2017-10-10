@@ -47,19 +47,23 @@ if ( $poll == "wait" ) { # reconnecting for poll
   echo fetch($file);
 } else { # do the thing that makes $file change
   #$addendum = `/usr/local/bin/mash ledger.m $ledg`;
-  $addendum = file_get_contents("http://kibotzer.com/yootles.php?ledger=$ledg");
+  $addendum = file_get_contents("http://yootles.com/yootles.php?ledger=$ledg");
 
-  $yd = "http://kibotzer.com/yoodat/";
-  file_put_contents("data/$ledg-balances.txt", 
-    file_get_contents("$yd$ledg-balances.txt"));
-  file_put_contents("data/$ledg-snapshot.txt", 
-    file_get_contents("$yd$ledg-snapshot.txt"));
-  file_put_contents("data/$ledg-transactions.csv", 
-    file_get_contents("$yd$ledg-transactions.csv"));
-  file_put_contents("data/$ledg-transactions.html", 
-    file_get_contents("$yd$ledg-transactions.html"));
-  file_put_contents("data/netbal.mma", 
-    file_get_contents("${yd}netbal.mma"));
+  # this was grabbing things from kibotzer.com/yoodat (where the mathematica
+  # script wrote its files) and putting them in in yootles.com/data and it seems
+  # like we can just do everything in yootles.com/data but maybe there was some
+  # reason for having the files in 2 places that i don't understand? #chesterton
+  #$yd = "http://yootles.com/data/";
+  #file_put_contents("data/$ledg-balances.txt", 
+  #  file_get_contents("$yd$ledg-balances.txt"));
+  #file_put_contents("data/$ledg-snapshot.txt", 
+  #  file_get_contents("$yd$ledg-snapshot.txt"));
+  #file_put_contents("data/$ledg-transactions.csv", 
+  #  file_get_contents("$yd$ledg-transactions.csv"));
+  #file_put_contents("data/$ledg-transactions.html", 
+  #  file_get_contents("$yd$ledg-transactions.html"));
+  #file_put_contents("data/netbal.mma", 
+  #  file_get_contents("${yd}netbal.mma"));
 
   #while(preg_match('/BEGINYOOTLECHUNK\[([^\[\]]*)\]/', $c, $m)) {
   #  $tag = trim($m[1]);

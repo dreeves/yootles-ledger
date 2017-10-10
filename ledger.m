@@ -35,7 +35,7 @@ If[Length[args] < 2,
   prn["USAGE: ",args[[1]]," name_of_ledger"];
   Exit[1]];
 ledg       = args[[2]]; (* the name of the ledger to process *)
-lpath      = "yoodat/";
+lpath      = "data/"; (* was yoodat on /var/www/html/kibotzer *)
 lsrc       = "http://insecure.padm.us/yl-"<>ledg<>"/export/txt";
 snapFile   = lpath<>ledg<>"-snapshot.txt";  (* snapshot of the ledger source *)
 outFile    = lpath<>ledg<>"-balances.txt";  (* table that shows the balances *)
@@ -561,32 +561,3 @@ Export["accounts.csv",
     {"ledger","username","firstname","wholename","email","balance","netbal"}] /.
       InputForm->Identity, "CSV"];
 *)
-
-  
-(* SCRATCH... ****************************************************************
-
-(* SCHEDULED FOR DELETION... 
-
-(* A list of dates starting with date a and repeating on the dth of every 
-   deltath month, not exceeding date b, where d is the day in date a.  
-   Every date uses the time of day from date a.
-   Both a and b can be either dates or timestamps. *)
-monthly[a_,b_, delta_:1] := Most[NestWhileList[mPlus[#,delta]&, a, fd@#<=fd@b&]]
-  
-yearly[a_,b_, delta_:1] := 
-  Most[NestWhileList[dPlus[#,delta,"year"]&, a, fd@#<=fd@b&]]
-
-(* A list of dates starting with date a and repeating n times per year,
-   not exceeding date b. *)
-nthly[a_, b_, n_] := td /@ Range[fd[a], fd[b], secs["year"]/n]
-
-(* Return date d with explicit time or not, depending on what template t has. *)
-(* SCHEDULED FOR DELETION *)
-(* conform[d_, t_?NumberQ] := d
-   conform[d_List, t_List] := Take[d, Max[3, Length@t]] *)
-  
-(* Returns, as a date, x (given as either timestamp or date) plus d months, 
-   ie, the same day and time d months later. *)
-mPlus[x_, d_:1] := dPlus[x, d, "month"]
-
-*******************************************************************************)

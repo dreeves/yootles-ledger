@@ -42,6 +42,7 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([^/\.]+)/*$ ledger.php?ledg=$1 [NC,L]
 
 # Old url scheme for ledgers, yootles.com/ledger/foo to yootles.com/foo
+# Probably safe to drop this by now since it probably last mattered in 2006
 RewriteRule ^ledger/(.*)/*$ $1 [R,NC,L]
 
 # yootles.com/foo/alice -> yootles.com/data/foo-alice.txt
