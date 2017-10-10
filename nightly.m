@@ -1,6 +1,9 @@
 #!/Applications/Mathematica.app/Contents/MacOS/MathematicaScript -script 
 (* Takes (or fetches) a list of ledgers and updates all the individualized
 transaction histories. I generally cron this nightly from my laptop. *)
+(* Me in 2017: why the heck don't we do this every time the balances are 
+refreshed? Maybe it's slow doing it brute force like this, sifting through
+all the transactions again and again for each account on the ledger. *)
 
 baseurl = "http://yootles.com";
 rpath = "y:/var/www/html/yootles/data/";

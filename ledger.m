@@ -158,7 +158,7 @@ td[x_]          := x;  (* if it's already a date, leave it *)
    {2007,9,15,12,0,0} use td@fd[{2007,9}]. *)
 
 TODAY = fd@Take[td@start,3];  (* noon today *)
-LAST = INDEFINITE = {};
+LAST = INDEFINITE = {};   (* date of latest entry or today, whichever's later *)
 
 (* Official version of this is now on mma pad *)
 (* Returns, as a date, x (given as either timestamp or date) plus amount of 
@@ -566,71 +566,6 @@ Export["accounts.csv",
 (* SCRATCH... ****************************************************************
 
 (* SCHEDULED FOR DELETION... 
-(* Numeric InputForm: show as a decimal number, and on one line. *)
-ni[x_InputForm] := x  (* do nothing if already InputForm *)
-ni[x_] := Which[ IntegerQ[x], x,
-                 NumericQ[x], InputForm[N[x]],
-                 StringQ[x],  x,
-                 True,        InputForm[x] ]
-ni[x_String, _] = x;
-ni[x_, decplaces_] := InputForm[N[Round[x*10^decplaces]/10^decplaces]]
-*)
-
-(* SCHEDULED FOR DELETION... 
-iou[opts___Rule] := Module[{f},
-  f@"rpt" = -1;    f@"ru" = "";       f@"til" = -1;
-  f@"grp" = ledg;  f@"cur" = "ytl";   f@"id" = -1;
-  (* each[a_->v_, {opts}, f@ToString@a = v]; *)
-  Scan[(f@ToString@First@# = Last@#)&, {opts}];
-  If[StringQ[f@"rpt"] && f@"ru" === "", {f@"rpt", f@"ru"} = First[
-    StringReplace[f@"rpt", re@"^([\\d\\.]* TODO )\\s*(\\w*?)s?\\s*$"->{"$1","$2"}]]];
-  (*prout["DEBUG: rpt: ", f@"rpt", ", ru: ", f@"ru", " <br>\n"];*)
-  If[StringQ[f@"rpt"], f@"rpt" = Replace[eval[f@"rpt"], Null->1]];
-  (* TODO: switch to Sow and Flatten[Reap[eval[ledger]][[2]],1] *)
-  AppendTo[rawdata, {f@"amt", f@"frm", f@"to", f@"when", f@"why",
-                     f@"rpt", f@"ru", f@"til", f@"grp", f@"cur", f@"id"}];
-  0]
-iou[x_, opts___Rule] := iou["amt"->x, opts]
-iou[x_,a_,b_, opts___Rule] := iou[x, "frm"->a, "to"->b, opts]
-iou[x_,a_,b_,d_, opts___Rule] := iou[x, a, b, "when"->d, opts]
-iou[x_,a_,b_,d_,c_, opts___Rule] := iou[x, a, b, d, "why"->c, opts]
-*)
-
-(*  SCHEDULED FOR DELETION:
-unixtm[-1] = -1;
-unixtm[x_] := Round[fd@x - AbsoluteTime[{1970,1,1,0,0,0},TimeZone->0]]
-unixtm[s_String] := unixtm[AbsoluteTime[DateList[s]]]
-
-convertTej[{x_,a_,b_,d_,c_,r_,e_}] :=
-  {ledg, x, a, b, unixtm[d], StringReplace[c, "\n"->" "], 
-   Which[r==0, 0,
-         r==12, "month", 
-         r==52, "week", 
-         True, cat[InputForm[1/r], " year"]],
-   unixtm[e], "tbd", "ytl"}
-
-Export["tej.csv",
-  Prepend[convertTej /@ data, 
-  {"ledger", "amt", "frm", "to", "when", "why", "rep", "end", "int", "cur"}], 
-  "CSV"];
-*)
-
-(* DEPRECATED: repeat freq and end as positional arguments
-iou[x_,a_,b_,d_,c_, 12, o___Rule] := iou[x,a,b,d,c, "rpt"->1, "ru"->"month", o]
-iou[x_,a_,b_,d_,c_, 52, o___Rule] := iou[x,a,b,d,c, "rpt"->1, "ru"->"week", o]
-iou[x_,a_,b_,d_,c_, r_, o___Rule] := iou[x,a,b,d,c, "rpt"->1/r,"ru"->"year", o]
-iou[x_,a_,b_,d_,c_, 12, e_,o___Rule] := iou[x,a,b,d,c,"rpt"->1,"ru"->"month",o]
-iou[x_,a_,b_,d_,c_, 52, e_, o___Rule] :=
-                             iou[x,a,b,d,c, "rpt"->1, "ru"->"week", "til"->e, o]
-iou[x_,a_,b_,d_,c_, r_, e_, o___Rule] := 
-                           iou[x,a,b,d,c, "rpt"->1/r, "ru"->"year", "til"->e, o]
-*)
-
-(* DEPRECATED. should move to explicit options rpt and ru...
-   We treat a frequency of 12 (monthly) and 52 (weekly) specially.  
-   It repeats on the same day of the month or day of the week as the first IOU.
-   If you don't want this, just use 12.0 or 52.0 instead of 12 or 52 (the 
-   integers). *)
 
 (* A list of dates starting with date a and repeating on the dth of every 
    deltath month, not exceeding date b, where d is the day in date a.  
