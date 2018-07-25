@@ -1,0 +1,30 @@
+account[ali,   "Alice",   "alice@yootles.com"]
+account[bob,   "Bob",     "bob@yootles.com"]
+account[car,   "Carol",   "carol@yootles.com"]
+
+(******************************************************************************)
+(* TRANSACTIONS, LATEST FIRST.  TEMPLATE: iou[YYYY.MM.DD, amt, from, to, why] *)
+(******************************************************************************)
+
+iou[1000, ali, bob, 2006.05.31, "this is alice transferring the $1000 back to bob again"]
+iou[1000, bob, ali, 2006.05.31, "transfer from bob to alice; maybe alice bought bob a bike"]
+
+(******************************************************************************)
+(********************************** SETTINGS **********************************)
+(******************************************************************************)
+
+irate[1970.01.01] = .05;
+irate[2005.05.31] = .06;     (* Add new lines when the interest rate changes. *)
+
+asOf = LAST;       (* Compute balances as of this date.  Possible values:     *)
+                   (* - An actual date like 2006.07.26                        *)
+                   (* - LAST to compute up thru the last logged transaction   *)
+                   (*   or noon today, whichever's later.                     *)
+                   (* - TODAY to compute up thru noon today.                  *)
+
+(******************************************************************************)
+(*** NOTES.  NOTHING BELOW THIS LINE WILL BE PROCESSED.  [MAGIC_LEDGER_END] ***)
+(******************************************************************************)
+
+Treat the area here like a normal etherpad document, for scratch notes, etc.
+Move any IOUs here to comment them out.

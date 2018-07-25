@@ -36,7 +36,8 @@ If[Length[args] < 2,
   Exit[1]];
 ledg       = args[[2]]; (* the name of the ledger to process *)
 lpath      = "data/"; (* was yoodat on /var/www/html/kibotzer *)
-lsrc       = "http://insecure.padm.us/yl-"<>ledg<>"/export/txt";
+lurl       = "http://insecure.padm.us/";
+lsrc       = lurl<>"yl-"<>ledg<>"/export/txt";
 snapFile   = lpath<>ledg<>"-snapshot.txt";  (* snapshot of the ledger source *)
 outFile    = lpath<>ledg<>"-balances.txt";  (* table that shows the balances *)
 csvFile    = lpath<>ledg<>"-transactions.csv";
@@ -483,6 +484,9 @@ hoursminder[yoog_, hourlyrate_, frm_, to_] :=
 
 preguts = If[FileExistsQ[secretFile], Import[secretFile, "Text"], ""];
 theguts = Import[lsrc, "Text"];
+If[theguts === $Failed, 
+  prn["ERROR: Could not fetch ", lsrc];
+  Exit[1]];
 theguts = StringReplace[theguts, "<script>" -> "<spamscript3>"];
 snapStr = OpenWrite[snapFile]; WriteString[snapStr, theguts]; Close[snapStr];
 theguts = StringReplace[preguts <> theguts,       (* see the parse[] function *)
