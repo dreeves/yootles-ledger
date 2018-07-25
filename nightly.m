@@ -35,7 +35,9 @@ go[ldg_] := Module[{procAcct, data, roster, n, t},
   data = Quiet[Import[baseurl<>"/data/"<>ldg<>"-transactions.csv"]];
   If[data === $Failed || Length@First@data < 7, roster = {},
     roster = Take[First@data, {7, -1}]];
+  prn[baseurl,"/",ldg," -----------------------------------------------------"];
   each[p_, roster, (* for each person p on the roster for ledger ldg *)
+    pr[baseurl,"/data/", ldg, "-", p, ".txt  "];
     t = data;
     n = Position[First@t, p][[1,1]];
     t = (#1[[{4, 1, 2, 3, 5, n}]]&) /@ t;
@@ -44,7 +46,7 @@ go[ldg_] := Module[{procAcct, data, roster, n, t},
     PrependTo[t, {"Date", "Amount", "From", "To", "Reason", "Balance"}];
     Export[cat[lpath, p, ""], table@t, "Text"];
     system["scp ", lpath, p, " ", rpath, ldg, "-", p, ".txt"];
-    prn[baseurl,"/data/", ldg, "-", p, ".txt"]]]
+  ]]
 
 start = AbsoluteTime[]; 
 go /@ ledgers; 
