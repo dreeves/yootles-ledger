@@ -46,8 +46,10 @@ if ( $poll == "wait" ) { # reconnecting for poll
   } while(carefulfmt($file) == $last);
   echo fetch($file);
 } else { # do the thing that makes $file change
-  #$addendum = `/usr/local/bin/mash ledger.m $ledg`;
-  $addendum = file_get_contents("http://yootles.com/yootles.php?ledger=$ledg");
+  # the 2nd version with file_get_contents was working for years until around
+  # 2018-07-20 when it stopped so i'm trying the first version
+  $addendum = `/usr/local/bin/mash ledger.m $ledg`;
+  #$addendum = file_get_contents("http://yootles.com/yootles.php?ledger=$ledg");
 
   # this was grabbing things from kibotzer.com/yoodat (where the mathematica
   # script wrote its files) and putting them in in yootles.com/data and it seems

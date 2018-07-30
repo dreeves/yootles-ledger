@@ -8,6 +8,6 @@ if(!isset($ledg)) {
 }
 
 header('Content-type: text/plain');
-echo `/usr/local/bin/mash ledger.m $ledg`;
+echo `/usr/local/bin/mash /var/www/html/yootles/ledger.m $ledg`;
 
 ?>
