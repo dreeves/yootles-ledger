@@ -5,7 +5,7 @@ transaction histories. I generally cron this nightly from my laptop. *)
 refreshed? Maybe it's slow doing it brute force like this, sifting through
 all the transactions again and again for each account on the ledger. *)
 
-baseurl = "http://yootles.com";
+baseurl = "http://yootl.es";
 rpath = "y:/var/www/html/yootles/data/";
 lpath = "~/tmp/";
 

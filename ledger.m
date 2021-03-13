@@ -432,6 +432,7 @@ iouLeg[___] := prn["ERROR iou-rpt: please tell dreeves <br>"]
 IOU = iou;   (* an alias for iou *)
 iou[amt_?NumericQ, rest___] := iouLeg[amt, rest]
 iou[when_, amt_, frm_, to_, why_] := iouLeg[amt, frm, to, when, why]
+iou[___] := prn["ERROR: wrong number of arguments to IOU <br>"]
 iouDaily[s_,e_,x_,f_,t_,c_]    := iouLeg[x, f, t, s, c, rpt->"day",   til->e]
 iouWeekly[s_,e_,x_,f_,t_,c_]   := iouLeg[x, f, t, s, c, rpt->"week",  til->e]
 iouBiweekly[s_,e_,x_,f_,t_,c_] := iouLeg[x, f, t, s, c, rpt->"2week", til->e]
