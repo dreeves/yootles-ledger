@@ -1,4 +1,5 @@
-#!/Applications/Mathematica.app/Contents/MacOS/MathematicaScript -script 
+#!/Applications/Mathematica.app/Contents/MacOS/MathKernel -script
+(* SCHDEL /Applications/Mathematica.app/Contents/MacOS/MathematicaScript *)
 (* Takes (or fetches) a list of ledgers and updates all the individualized
 transaction histories. I generally cron this nightly from my laptop. *)
 (* Me in 2017: why the heck don't we do this every time the balances are 
@@ -25,8 +26,8 @@ table[t_] := StringReplace[ToString[TableForm[ni/@#&/@t]], "\n\n"->"\n"]
 If[Length@ARGV > 1,
   ledgers = Rest@ARGV;
 ,
-  (* system["~/prj/yootles/fetchlist.m"]; *)
-  ledgers = Import["~/prj/yootles/ledgers.txt", "Lines"];
+  (* system["~/lab/yootles/fetchlist.m"]; *)
+  ledgers = Import["~/lab/yootles/ledgers.txt", "Lines"];
 ];
 
 prn["Ledgers to process:\n  ", ledgers, "\n"];
