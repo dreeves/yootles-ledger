@@ -48,7 +48,8 @@ echo <<<_END
 </div>
 <div class="spacer"></div>
 <div id="ep">
-  <iframe src="$padurl" sandbox="allow-same-origin allow-scripts allow-forms allow-cookies"></iframe>
+  <iframe src="$padurl"></iframe>
+  <!-- this didn't help i guess: sandbox="allow-same-origin allow-scripts allow-forms allow-cookies" -->
 </div>
 <div id="static">
 _END;

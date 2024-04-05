@@ -290,7 +290,7 @@ crunch[] := Module[{trans,ntrans,dtrans, last,dummydates,ii,srtfun,ledglist},
   ntrans = Sort[{#1,#2,#3, fd[#4]}& @@@ Join[trans, dtrans], #1[[4]]<#2[[4]]&];
   (* Same for historical transactions. *)
   expdata = Sort[Join[{#1, #2, #3, td[#4], #5, irt[#4]}& @@@ trans, 
-                      {#1, "", "", td[#4], "", irt[#4]}& @@@ dtrans],
+                      {#1, "", "", td[#4], "[dummy transaction for seeing latest balance]", irt[#4]}& @@@ dtrans],
                  fd[#1[[4]]] < fd[#2[[4]]]&];
                       
   Clear[balance, intRcvd, lastpos];
