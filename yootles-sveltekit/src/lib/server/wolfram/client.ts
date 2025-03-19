@@ -1,5 +1,4 @@
-import type { WolframConfig, WolframResponse, BalanceResult, TransactionHistory } from './types';
-import type { Ledger } from '$lib/types/ledger';
+import type { WolframConfig, WolframResponse, BalanceResult } from './types';
 
 export class WolframClient {
   private config: WolframConfig;
@@ -10,13 +9,12 @@ export class WolframClient {
     this.controller = new AbortController();
   }
 
-  private async request<T>(endpoint: string, data: unknown): Promise<WolframResponse<T>> {
+  private async request<T>(data: unknown): Promise<WolframResponse<T>> {
     try {
-      const response = await fetch(`${this.config.baseUrl}${endpoint}`, {
+      const response = await fetch(this.config.baseUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(data),
         signal: this.controller.signal
@@ -27,11 +25,7 @@ export class WolframClient {
       }
 
       const result = await response.json();
-      return {
-        status: 'success',
-        data: result,
-        timestamp: new Date().toISOString()
-      };
+      return result;
     } catch (error) {
       return {
         status: 'error',
@@ -41,12 +35,8 @@ export class WolframClient {
     }
   }
 
-  async calculateBalances(ledger: Ledger): Promise<WolframResponse<BalanceResult>> {
-    return this.request<BalanceResult>('/calculate-balances', ledger);
-  }
-
-  async getTransactionHistory(ledger: string, account: string): Promise<WolframResponse<TransactionHistory>> {
-    return this.request<TransactionHistory>('/transaction-history', { ledger, account });
+  async calculateBalances(ledger: string): Promise<WolframResponse<BalanceResult>> {
+    return this.request<BalanceResult>({ ledger });
   }
 
   abort(): void {

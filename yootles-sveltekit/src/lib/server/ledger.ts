@@ -1,6 +1,8 @@
-import { readFile, writeFile } from 'fs/promises';
+import { readFile } from 'fs/promises';
 import { join } from 'path';
 import type { Ledger, Transaction, Account } from '$lib/types/ledger';
+import { WolframClient } from './wolfram/client';
+import { getWolframConfig } from './wolfram/config';
 
 export function parseAccount(line: string): Account | null {
   const match = line.match(/account\[\s*(.*?)\s*,\s*"(.*?)"\s*,\s*"(.*?)"\s*\]/);
@@ -33,147 +35,36 @@ export function parseInterestRate(line: string): { date: string; rate: number } 
   };
 }
 
-function validateLedger(ledger: Ledger): void {
-  // Validate accounts
-  if (!Array.isArray(ledger.accounts)) {
-    throw new Error('Ledger accounts must be an array');
-  }
-  
-  const accountIds = new Set(ledger.accounts.map(a => a.id));
-  
-  // Validate transactions
-  if (!Array.isArray(ledger.transactions)) {
-    throw new Error('Ledger transactions must be an array');
-  }
-  
-  for (const tx of ledger.transactions) {
-    if (!accountIds.has(tx.from)) {
-      throw new Error(`Transaction references unknown account: ${tx.from}`);
-    }
-    if (!accountIds.has(tx.to)) {
-      throw new Error(`Transaction references unknown account: ${tx.to}`);
-    }
-    if (isNaN(tx.amount) || tx.amount <= 0) {
-      throw new Error(`Invalid transaction amount: ${tx.amount}`);
-    }
-    if (!/^\d{4}\.\d{2}\.\d{2}$/.test(tx.date)) {
-      throw new Error(`Invalid transaction date format: ${tx.date}`);
-    }
-  }
-  
-  // Validate interest rates
-  if (!Array.isArray(ledger.interestRates)) {
-    throw new Error('Ledger interest rates must be an array');
-  }
-  
-  for (const rate of ledger.interestRates) {
-    if (!/^\d{4}\.\d{2}\.\d{2}$/.test(rate.date)) {
-      throw new Error(`Invalid interest rate date format: ${rate.date}`);
-    }
-    if (isNaN(rate.rate) || rate.rate < 0) {
-      throw new Error(`Invalid interest rate: ${rate.rate}`);
-    }
-  }
-}
-
 export async function loadLedger(name: string): Promise<Ledger> {
   try {
     if (name === 'socket.io') {
       throw new Error('Invalid ledger name');
     }
 
+    // Read the raw ledger file
     const filePath = join(process.cwd(), '..', 'data', `${name}-snapshot.txt`);
     const content = await readFile(filePath, 'utf-8');
 
-    const lines = content.split('\n');
-    const accounts: Account[] = [];
-    const transactions: Transaction[] = [];
-    const interestRates: Array<{ date: string; rate: number }> = [];
+    // Process the ledger using Wolfram Cloud
+    const client = new WolframClient(getWolframConfig());
+    const result = await client.calculateBalances(content);
 
-    let reachedEnd = false;
-
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      
-      if (trimmedLine === '[MAGIC_LEDGER_END]') {
-        reachedEnd = true;
-        continue;
-      }
-      if (reachedEnd) continue;
-
-      if (!trimmedLine || trimmedLine.startsWith('#')) continue;
-
-      const account = parseAccount(trimmedLine);
-      if (account) {
-        accounts.push(account);
-        continue;
-      }
-
-      const transaction = parseTransaction(trimmedLine);
-      if (transaction) {
-        transactions.push(transaction);
-        continue;
-      }
-
-      const interestRate = parseInterestRate(trimmedLine);
-      if (interestRate) {
-        interestRates.push(interestRate);
-      }
+    if (result.status === 'error' || !result.data) {
+      throw new Error(result.error || 'Failed to process ledger');
     }
 
-    const ledger = {
+    // Convert Wolfram response to our Ledger type
+    return {
       id: name,
-      accounts,
-      transactions,
-      interestRates
+      accounts: result.data.accounts,
+      transactions: result.data.transactions,
+      interestRates: result.data.interestRates
     };
-
-    // Validate the loaded ledger
-    validateLedger(ledger);
-
-    return ledger;
   } catch (error) {
     if (error.message === 'Invalid ledger name') {
       throw error;
     }
     console.error('Error loading ledger:', error);
     throw new Error(`Failed to load ledger "${name}": ${error.message}`);
-  }
-}
-
-export async function saveLedger(name: string, ledger: Ledger): Promise<void> {
-  try {
-    // Validate before saving
-    validateLedger(ledger);
-
-    const filePath = join(process.cwd(), '..', 'data', `${name}-snapshot.txt`);
-    
-    const lines: string[] = [];
-    
-    ledger.accounts.forEach(account => {
-      lines.push(formatAccount(account));
-    });
-    
-    lines.push('');
-    
-    ledger.interestRates.forEach(rate => {
-      lines.push(formatInterestRate(rate));
-    });
-    
-    lines.push('');
-    
-    ledger.transactions
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .forEach(tx => {
-        lines.push(formatTransaction(tx));
-      });
-    
-    lines.push('');
-    lines.push('[MAGIC_LEDGER_END]');
-    
-    await writeFile(filePath, lines.join('\n'), 'utf-8');
-  } catch (error) {
-    console.error('Error saving ledger:', error);
-    throw new Error(`Failed to save ledger "${name}": ${error.message}`);
   }
 }
