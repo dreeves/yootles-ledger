@@ -1,4 +1,4 @@
-import { readFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import type { Ledger, Transaction, Account } from '$lib/types/ledger';
 
@@ -33,9 +33,24 @@ function parseInterestRate(line: string): { date: string; rate: number } | null 
   };
 }
 
+function formatAccount(account: Account): string {
+  return `account[${account.id}, "${account.name}", "${account.email}"]`;
+}
+
+function formatTransaction(tx: Transaction): string {
+  return `iou[${tx.amount}, ${tx.from}, ${tx.to}, ${tx.date}, "${tx.description}"]`;
+}
+
+function formatInterestRate(rate: { date: string; rate: number }): string {
+  return `irate[${rate.date}, ${rate.rate}]`;
+}
+
 export async function loadLedger(name: string): Promise<Ledger> {
   try {
-    // Read the ledger file from the data directory
+    if (name === 'socket.io') {
+      throw new Error('Invalid ledger name');
+    }
+
     const filePath = join(process.cwd(), '..', 'data', `${name}-snapshot.txt`);
     const content = await readFile(filePath, 'utf-8');
 
@@ -49,17 +64,14 @@ export async function loadLedger(name: string): Promise<Ledger> {
     for (const line of lines) {
       const trimmedLine = line.trim();
       
-      // Stop parsing at MAGIC_LEDGER_END
       if (trimmedLine === '[MAGIC_LEDGER_END]') {
         reachedEnd = true;
         continue;
       }
       if (reachedEnd) continue;
 
-      // Skip empty lines and comments
       if (!trimmedLine || trimmedLine.startsWith('#')) continue;
 
-      // Parse different types of entries
       const account = parseAccount(trimmedLine);
       if (account) {
         accounts.push(account);
@@ -79,18 +91,50 @@ export async function loadLedger(name: string): Promise<Ledger> {
     }
 
     return {
+      id: name,
       accounts,
       transactions,
       interestRates
     };
   } catch (error) {
+    if (error.message === 'Invalid ledger name') {
+      throw error;
+    }
     console.error('Error loading ledger:', error);
     throw new Error(`Failed to load ledger "${name}": ${error.message}`);
   }
 }
 
 export async function saveLedger(name: string, ledger: Ledger): Promise<void> {
-  // TODO: Implement ledger saving
-  // This will be implemented when we need to save changes
-  throw new Error('Not implemented');
+  try {
+    const filePath = join(process.cwd(), '..', 'data', `${name}-snapshot.txt`);
+    
+    const lines: string[] = [];
+    
+    ledger.accounts.forEach(account => {
+      lines.push(formatAccount(account));
+    });
+    
+    lines.push('');
+    
+    ledger.interestRates.forEach(rate => {
+      lines.push(formatInterestRate(rate));
+    });
+    
+    lines.push('');
+    
+    ledger.transactions
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .forEach(tx => {
+        lines.push(formatTransaction(tx));
+      });
+    
+    lines.push('');
+    lines.push('[MAGIC_LEDGER_END]');
+    
+    await writeFile(filePath, lines.join('\n'), 'utf-8');
+  } catch (error) {
+    console.error('Error saving ledger:', error);
+    throw new Error(`Failed to save ledger "${name}": ${error.message}`);
+  }
 }
