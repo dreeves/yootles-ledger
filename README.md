@@ -2,6 +2,8 @@
 
 Yootles is a financial ledger system for tracking IOUs and loans between friends and family. Originally written in Scheme around 2005, it now uses PHP, JavaScript, and Mathematica to provide a collaborative ledger system with automatic interest calculations.
 
+[Historical README](https://github.com/dreeves/yootles-ledger/blob/978c18c93c810bdb01cb441f8d5cd7a86ad76054/README.md)
+
 ## Features
 
 - Collaborative ledger editing via Etherpad
