@@ -39,7 +39,7 @@ export class WolframClient {
       }
 
       const result = await response.json();
-      console.error('Wolfram API response:', result);
+      console.error('Wolfram API response:', JSON.stringify(result, null, 2));
       return result;
     } catch (error) {
       console.error('Wolfram client error:', error);

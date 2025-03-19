@@ -3,14 +3,16 @@
 (* Parser functions *)
 parseAccount[s_] := Module[{parts},
   parts = StringCases[s, 
-    RegularExpression["account\\[(.*?),\\s*\"(.*?)\",\\s*\"(.*?)\"\\]"] -> 
+    RegularExpression["account\\[(.*?),\\s*\"(.*?)\"(?:,\\s*\"(.*?)\")?\\]"] -> 
     {"$1", "$2", "$3"}
   ];
   If[Length[parts] > 0,
     Association[
       "id" -> StringTrim[First[parts][[1]]],
       "name" -> First[parts][[2]],
-      "email" -> First[parts][[3]]
+      "email" -> If[Length[First[parts]] > 2 && First[parts][[3]] != "", 
+                   First[parts][[3]], 
+                   ""]  (* Default to empty string if no email *)
     ],
     Missing["InvalidFormat"]
   ]
@@ -23,10 +25,10 @@ parseTransaction[s_] := Module[{parts},
   ];
   If[Length[parts] > 0,
     Association[
-      "amount" -> ToExpression[First[parts][[1]]],
-      "from" -> StringTrim[First[parts][[2]]],
-      "to" -> StringTrim[First[parts][[3]]],
-      "date" -> First[parts][[4]],
+      "date" -> First[parts][[1]],
+      "amount" -> ToExpression[First[parts][[2]]],
+      "from" -> StringTrim[First[parts][[3]]],
+      "to" -> StringTrim[First[parts][[4]]],
       "description" -> First[parts][[5]]
     ],
     Missing["InvalidFormat"]
