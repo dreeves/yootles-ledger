@@ -33,3 +33,4 @@ Ledger files contain:
 - `yootles.com/foo` - View ledger named "foo"
 - `yootles.com/foo/transactions` - Transaction history
 - `yootles.com/foo-transactions.csv` - CSV export
+- Etherpad URLs are direct: `padm.us/pad-name` (not `/p/pad-name`)

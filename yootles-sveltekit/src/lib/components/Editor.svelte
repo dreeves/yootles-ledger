@@ -10,7 +10,7 @@
   onMount(() => {
     // Create iframe for Etherpad
     const iframe = document.createElement('iframe');
-    iframe.src = `https://padm.us/p/yl-${data.ledger.id}`;
+    iframe.src = `https://padm.us/yl-${data.ledger.id}`;
     iframe.style.width = '100%';
     iframe.style.height = '600px';
     iframe.style.border = 'none';
