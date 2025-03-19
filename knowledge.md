@@ -28,6 +28,10 @@ Ledger files contain:
 - Run `./deploy.sh` to deploy to yootles.com
 - Files in `/data` are gitignored
 - Interest rates can be changed by adding new `irate[]` entries
+- Local development requires:
+  1. Add yootles.local to /etc/hosts
+  2. Run dev server with --host flag
+  3. Allow third-party cookies for yootles.local in browser settings
 
 ## URLs
 - `yootles.com/foo` - View ledger named "foo"
