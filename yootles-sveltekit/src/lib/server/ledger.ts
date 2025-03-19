@@ -1,39 +1,8 @@
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import type { Ledger, Transaction, Account } from '$lib/types/ledger';
+import type { Ledger } from '$lib/types/ledger';
 import { WolframClient } from './wolfram/client';
 import { getWolframConfig } from './wolfram/config';
-
-export function parseAccount(line: string): Account | null {
-  const match = line.match(/account\[\s*(.*?)\s*,\s*"(.*?)"\s*,\s*"(.*?)"\s*\]/);
-  if (!match) return null;
-  return {
-    id: match[1].trim(),
-    name: match[2],
-    email: match[3]
-  };
-}
-
-export function parseTransaction(line: string): Transaction | null {
-  const match = line.match(/iou\[(.*?),\s*(.*?),\s*(.*?),\s*([\d.]+),\s*"(.*?)"\]/);
-  if (!match) return null;
-  return {
-    amount: parseFloat(match[1]),
-    from: match[2].trim(),
-    to: match[3].trim(),
-    date: match[4],
-    description: match[5]
-  };
-}
-
-export function parseInterestRate(line: string): { date: string; rate: number } | null {
-  const match = line.match(/irate\[([\d.]+),\s*([\d.]+)\]/);
-  if (!match) return null;
-  return {
-    date: match[1],
-    rate: parseFloat(match[2])
-  };
-}
 
 export async function loadLedger(name: string): Promise<Ledger> {
   try {
@@ -57,16 +26,44 @@ export async function loadLedger(name: string): Promise<Ledger> {
       const client = new WolframClient(getWolframConfig());
       const result = await client.calculateBalances(content);
 
+      console.log('Wolfram Cloud response:', result);
+
       if (result.status === 'error' || !result.data) {
         throw new Error(result.error || 'Failed to process ledger');
       }
 
-      // Convert Wolfram response to our Ledger type
+      // Validate and log the accounts data
+      if (!Array.isArray(result.data.accounts)) {
+        console.error('Invalid accounts data:', result.data.accounts);
+        throw new Error('Invalid response: accounts is not an array');
+      }
+
+      console.log('Found accounts:', result.data.accounts);
+
+      // Ensure all required data is present and balances are valid numbers
+      const accounts = result.data.accounts.map(account => {
+        if (!account.id || !account.name) {
+          console.error('Invalid account data:', account);
+          throw new Error('Invalid account data received from Wolfram Cloud');
+        }
+        
+        // Ensure balance is a valid number or default to 0
+        const balance = account.balance;
+        const validBalance = typeof balance === 'number' && !isNaN(balance) ? balance : 0;
+        
+        return {
+          ...account,
+          balance: validBalance
+        };
+      });
+
+      console.log('Processed accounts:', accounts);
+
       return {
         id: name,
-        accounts: result.data.accounts,
-        transactions: result.data.transactions,
-        interestRates: result.data.interestRates
+        accounts,
+        transactions: Array.isArray(result.data.transactions) ? result.data.transactions : [],
+        interestRates: Array.isArray(result.data.interestRates) ? result.data.interestRates : []
       };
     } catch (fileError) {
       console.error('File read error:', {
