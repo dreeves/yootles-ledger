@@ -110,6 +110,53 @@ calculateBalances[accounts_, transactions_, rates_] := Module[
   ]
 ];
 
+(* Calculate transaction history for a specific account *)
+calculateHistory[account_, transactions_, rates_] := Module[
+  {balance = 0, currentRate = 0, history = {}, lastDate = ""},
+  
+  (* Sort transactions and rates by date *)
+  transactions = Sort[transactions, #1["date"] <= #2["date"] &];
+  rates = Sort[rates, #1["date"] <= #2["date"] &];
+  
+  (* Process each transaction *)
+  Scan[
+    Function[tx,
+      (* Update balance based on transaction *)
+      balance += Which[
+        tx["from"] == account["id"], -tx["amount"],
+        tx["to"] == account["id"], tx["amount"],
+        True, 0
+      ];
+      
+      (* Add to history if account involved *)
+      If[tx["from"] == account["id"] || tx["to"] == account["id"],
+        AppendTo[history, 
+          Association[
+            "date" -> tx["date"],
+            "amount" -> If[tx["from"] == account["id"], 
+                         -tx["amount"], 
+                         tx["amount"]],
+            "balance" -> Round[balance, 0.01],
+            "description" -> tx["description"],
+            "otherParty" -> If[tx["from"] == account["id"], 
+                             tx["to"], 
+                             tx["from"]]
+          ]
+        ]
+      ]
+    ],
+    transactions
+  ];
+  
+  (* Return transaction history *)
+  Association[
+    "account" -> account["id"],
+    "transactions" -> history,
+    "currentBalance" -> Round[balance, 0.01],
+    "lastUpdated" -> DateString[]
+  ]
+];
+
 (* Main processing function *)
 processLedger[ledgerText_] := Module[{lines, accounts, transactions, rates},
   lines = StringSplit[ledgerText, "\n"];
@@ -156,7 +203,7 @@ processLedger[ledgerText_] := Module[{lines, accounts, transactions, rates},
   ]
 ];
 
-(* Deploy the API endpoint *)
+(* Deploy the API endpoints *)
 CloudDeploy[
   APIFunction[
     {"ledger" -> "String"},
@@ -164,4 +211,24 @@ CloudDeploy[
     "JSON"
   ],
   "yootles/processLedger"
+];
+
+CloudDeploy[
+  APIFunction[
+    {"ledger" -> "String", "accountId" -> "String"},
+    Module[{result = processLedger[#ledger]},
+      If[result["status"] === "success",
+        Module[{account = Select[result["data", "accounts"], #["id"] == #accountId &][[1]]},
+          calculateHistory[
+            account,
+            result["data", "transactions"],
+            result["data", "interestRates"]
+          ]
+        ],
+        result
+      ]
+    ] &,
+    "JSON"
+  ],
+  "yootles/getTransactionHistory"
 ]
