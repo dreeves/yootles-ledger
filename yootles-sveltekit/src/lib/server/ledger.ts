@@ -20,44 +20,24 @@ export async function loadLedger(name: string): Promise<Ledger> {
         throw new Error('Ledger file is empty');
       }
 
-      console.error('Loaded ledger content:', content.substring(0, 100) + '...');
-
       // Process the ledger using Wolfram Cloud
       const client = new WolframClient(getWolframConfig());
       const result = await client.calculateBalances(content);
-
-      console.log('Wolfram Cloud response:', result);
 
       if (result.status === 'error' || !result.data) {
         throw new Error(result.error || 'Failed to process ledger');
       }
 
-      // Validate and log the accounts data
-      if (!Array.isArray(result.data.accounts)) {
-        console.error('Invalid accounts data:', result.data.accounts);
-        throw new Error('Invalid response: accounts is not an array');
-      }
+      // Create a map of balances by account ID
+      const balanceMap = new Map(
+        result.data.balances.map(b => [b.id, b.balance])
+      );
 
-      console.log('Found accounts:', result.data.accounts);
-
-      // Ensure all required data is present and balances are valid numbers
-      const accounts = result.data.accounts.map(account => {
-        if (!account.id || !account.name) {
-          console.error('Invalid account data:', account);
-          throw new Error('Invalid account data received from Wolfram Cloud');
-        }
-        
-        // Ensure balance is a valid number or default to 0
-        const balance = account.balance;
-        const validBalance = typeof balance === 'number' && !isNaN(balance) ? balance : 0;
-        
-        return {
-          ...account,
-          balance: validBalance
-        };
-      });
-
-      console.log('Processed accounts:', accounts);
+      // Merge account data with balances
+      const accounts = result.data.accounts.map(account => ({
+        ...account,
+        balance: balanceMap.get(account.id) ?? 0
+      }));
 
       return {
         id: name,
