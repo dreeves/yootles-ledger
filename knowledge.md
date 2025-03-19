@@ -20,7 +20,7 @@
 ## File Format
 Ledger files contain:
 - Account definitions: `account[id, "Name", "email"]`
-- Transactions: `iou[amount, from, to, YYYY.MM.DD, "description"]` 
+- Transactions: `iou[YYYY.MM.DD, amount, from, to, "description"]` 
 - Settings section with interest rates
 - Optional notes section after `[MAGIC_LEDGER_END]`
 
