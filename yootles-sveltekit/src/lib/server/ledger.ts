@@ -3,7 +3,7 @@ import { join } from 'path';
 import type { Ledger, Transaction, Account } from '$lib/types/ledger';
 
 export function parseAccount(line: string): Account | null {
-  const match = line.match(/account\[(.*?),\s*"(.*?)",\s*"(.*?)"\]/);
+  const match = line.match(/account\[\s*(.*?)\s*,\s*"(.*?)"\s*,\s*"(.*?)"\s*\]/);
   if (!match) return null;
   return {
     id: match[1].trim(),
