@@ -38,7 +38,7 @@ Yootles is a financial ledger system for tracking IOUs and loans between friends
 account[ali, "Alice", "alice@example.com"]
 account[bob, "Bob", "bob@example.com"]
 
-iou[1000, ali, bob, 2023.12.25, "Christmas loan"]
+iou[2023.12.25, 1000, ali, bob, "Christmas loan"]
 
 irate[2023.01.01] = .05  ; 5% interest rate
 ```
