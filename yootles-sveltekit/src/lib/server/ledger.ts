@@ -1,38 +1,15 @@
-import { readFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
-import type { Ledger, Transaction, Account } from '$lib/types/ledger';
+import type { Ledger } from '$lib/types/ledger';
 import { WolframClient } from './wolfram/client';
 import { getWolframConfig } from './wolfram/config';
 
-export function parseAccount(line: string): Account | null {
-  const match = line.match(/account\[\s*(.*?)\s*,\s*"(.*?)"\s*,\s*"(.*?)"\s*\]/);
-  if (!match) return null;
-  return {
-    id: match[1].trim(),
-    name: match[2],
-    email: match[3]
-  };
-}
-
-export function parseTransaction(line: string): Transaction | null {
-  const match = line.match(/iou\[(.*?),\s*(.*?),\s*(.*?),\s*([\d.]+),\s*"(.*?)"\]/);
-  if (!match) return null;
-  return {
-    amount: parseFloat(match[1]),
-    from: match[2].trim(),
-    to: match[3].trim(),
-    date: match[4],
-    description: match[5]
-  };
-}
-
-export function parseInterestRate(line: string): { date: string; rate: number } | null {
-  const match = line.match(/irate\[([\d.]+),\s*([\d.]+)\]/);
-  if (!match) return null;
-  return {
-    date: match[1],
-    rate: parseFloat(match[2])
-  };
+async function fetchFromEtherpad(name: string): Promise<string> {
+  const response = await fetch(`https://padm.us/yl-${name}/export/txt`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch from padm.us: ${response.statusText}`);
+  }
+  return response.text();
 }
 
 export async function loadLedger(name: string): Promise<Ledger> {
@@ -41,9 +18,43 @@ export async function loadLedger(name: string): Promise<Ledger> {
       throw new Error('Invalid ledger name');
     }
 
-    // Read the raw ledger file
     const filePath = join(process.cwd(), '..', 'data', `${name}-snapshot.txt`);
-    const content = await readFile(filePath, 'utf-8');
+    let content: string;
+
+    try {
+      // Try to read snapshot file
+      content = await readFile(filePath, 'utf-8');
+      
+      // If snapshot is empty, try to fetch from Etherpad
+      if (!content.trim()) {
+        console.log('Empty snapshot, fetching from Etherpad...');
+        content = await fetchFromEtherpad(name);
+        
+        // Save the fetched content to snapshot
+        if (content.trim()) {
+          await writeFile(filePath, content, 'utf-8');
+        }
+      }
+    } catch (fileError) {
+      // If file doesn't exist or other error, try Etherpad
+      console.log('No snapshot found, fetching from Etherpad...');
+      content = await fetchFromEtherpad(name);
+      
+      // Save the fetched content to snapshot
+      if (content.trim()) {
+        await writeFile(filePath, content, 'utf-8');
+      }
+    }
+
+    // If we still have no content, return an empty ledger
+    if (!content.trim()) {
+      return {
+        id: name,
+        accounts: [],
+        transactions: [],
+        interestRates: []
+      };
+    }
 
     // Process the ledger using Wolfram Cloud
     const client = new WolframClient(getWolframConfig());
@@ -53,7 +64,6 @@ export async function loadLedger(name: string): Promise<Ledger> {
       throw new Error(result.error || 'Failed to process ledger');
     }
 
-    // Convert Wolfram response to our Ledger type
     return {
       id: name,
       accounts: result.data.accounts,
