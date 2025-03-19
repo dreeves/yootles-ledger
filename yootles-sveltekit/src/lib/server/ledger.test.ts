@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { parseAccount, parseTransaction, parseInterestRate } from './ledger';
+import * as ledger from './ledger';
 
 describe('Ledger Parser', () => {
   describe('parseAccount', () => {
     it('should parse valid account entries', () => {
-      const result = parseAccount('account[alice, "Alice Smith", "alice@example.com"]');
+      const result = ledger.parseAccount('account[alice, "Alice Smith", "alice@example.com"]');
       expect(result).toEqual({
         id: 'alice',
         name: 'Alice Smith',
@@ -13,51 +13,71 @@ describe('Ledger Parser', () => {
     });
 
     it('should return null for invalid account entries', () => {
-      expect(parseAccount('not an account')).toBeNull();
-      expect(parseAccount('account[incomplete')).toBeNull();
+      expect(ledger.parseAccount('not an account')).toBeNull();
+      expect(ledger.parseAccount('account[incomplete')).toBeNull();
     });
 
     it('should handle whitespace variations', () => {
-      const result = parseAccount('account[  bob  ,  "Bob Jones"  ,  "bob@example.com"  ]');
+      const result = ledger.parseAccount('account[  bob  ,  "Bob Jones"  ,  "bob@example.com"  ]');
       expect(result).toEqual({
         id: 'bob',
         name: 'Bob Jones',
         email: 'bob@example.com'
       });
     });
+
+    it('should handle accounts without email', () => {
+      const result = ledger.parseAccount('account[ppd, "Pine Peak Digital"]');
+      expect(result).toEqual({
+        id: 'ppd',
+        name: 'Pine Peak Digital',
+        email: ''
+      });
+    });
   });
 
   describe('parseTransaction', () => {
     it('should parse valid transaction entries', () => {
-      const result = parseTransaction('iou[50.25, alice, bob, 2024.03.19, "Lunch"]');
+      const result = ledger.parseTransaction('iou[2024.03.19, 50.25, alice, bob, "Lunch"]');
       expect(result).toEqual({
+        date: '2024.03.19',
         amount: 50.25,
         from: 'alice',
         to: 'bob',
-        date: '2024.03.19',
         description: 'Lunch'
       });
     });
 
     it('should return null for invalid transaction entries', () => {
-      expect(parseTransaction('not a transaction')).toBeNull();
-      expect(parseTransaction('iou[incomplete')).toBeNull();
+      expect(ledger.parseTransaction('not a transaction')).toBeNull();
+      expect(ledger.parseTransaction('iou[incomplete')).toBeNull();
     });
 
     it('should handle decimal amounts correctly', () => {
-      const result = parseTransaction('iou[1234.56, alice, bob, 2024.03.19, "Big payment"]');
+      const result = ledger.parseTransaction('iou[2024.03.19, 1234.56, alice, bob, "Big payment"]');
       expect(result?.amount).toBe(1234.56);
     });
 
     it('should handle descriptions with spaces', () => {
-      const result = parseTransaction('iou[10, alice, bob, 2024.03.19, "Lunch at the cafe"]');
+      const result = ledger.parseTransaction('iou[2024.03.19, 10, alice, bob, "Lunch at the cafe"]');
       expect(result?.description).toBe('Lunch at the cafe');
+    });
+
+    it('should handle whitespace variations', () => {
+      const result = ledger.parseTransaction('iou[  2024.03.19  ,  50  ,  alice  ,  bob  ,  "Payment"  ]');
+      expect(result).toEqual({
+        date: '2024.03.19',
+        amount: 50,
+        from: 'alice',
+        to: 'bob',
+        description: 'Payment'
+      });
     });
   });
 
   describe('parseInterestRate', () => {
     it('should parse valid interest rate entries', () => {
-      const result = parseInterestRate('irate[2024.03.19, 0.05]');
+      const result = ledger.parseInterestRate('irate[2024.03.19, 0.05]');
       expect(result).toEqual({
         date: '2024.03.19',
         rate: 0.05
@@ -65,18 +85,26 @@ describe('Ledger Parser', () => {
     });
 
     it('should return null for invalid interest rate entries', () => {
-      expect(parseInterestRate('not an interest rate')).toBeNull();
-      expect(parseInterestRate('irate[incomplete')).toBeNull();
+      expect(ledger.parseInterestRate('not an interest rate')).toBeNull();
+      expect(ledger.parseInterestRate('irate[incomplete')).toBeNull();
     });
 
     it('should handle zero interest rates', () => {
-      const result = parseInterestRate('irate[2024.03.19, 0.00]');
+      const result = ledger.parseInterestRate('irate[2024.03.19, 0.00]');
       expect(result?.rate).toBe(0);
     });
 
     it('should handle high interest rates', () => {
-      const result = parseInterestRate('irate[2024.03.19, 0.99]');
+      const result = ledger.parseInterestRate('irate[2024.03.19, 0.99]');
       expect(result?.rate).toBe(0.99);
+    });
+
+    it('should handle whitespace variations', () => {
+      const result = ledger.parseInterestRate('irate[  2024.03.19  ,  0.05  ]');
+      expect(result).toEqual({
+        date: '2024.03.19',
+        rate: 0.05
+      });
     });
   });
 });
