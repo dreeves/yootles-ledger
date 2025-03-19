@@ -56,17 +56,43 @@ export async function loadLedger(name: string): Promise<Ledger> {
       };
     }
 
+    console.log('Processing ledger content:', {
+      contentPreview: content.substring(0, 200),
+      length: content.length
+    });
+
     // Process the ledger using Wolfram Cloud
     const client = new WolframClient(getWolframConfig());
     const result = await client.calculateBalances(content);
+
+    console.log('Wolfram Cloud response:', result);
 
     if (result.status === 'error' || !result.data) {
       throw new Error(result.error || 'Failed to process ledger');
     }
 
+    // Validate the response data
+    if (!Array.isArray(result.data.accounts)) {
+      throw new Error('Invalid response: accounts is not an array');
+    }
+
+    if (!Array.isArray(result.data.transactions)) {
+      throw new Error('Invalid response: transactions is not an array');
+    }
+
+    if (!Array.isArray(result.data.interestRates)) {
+      throw new Error('Invalid response: interestRates is not an array');
+    }
+
+    // Ensure balances are numbers
+    const accounts = result.data.accounts.map(account => ({
+      ...account,
+      balance: typeof account.balance === 'number' ? account.balance : 0
+    }));
+
     return {
       id: name,
-      accounts: result.data.accounts,
+      accounts,
       transactions: result.data.transactions,
       interestRates: result.data.interestRates
     };
