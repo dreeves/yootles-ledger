@@ -1,8 +1,39 @@
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
-import type { Ledger } from '$lib/types/ledger';
+import type { Ledger, Transaction, Account } from '$lib/types/ledger';
 import { WolframClient } from './wolfram/client';
 import { getWolframConfig } from './wolfram/config';
+
+export function parseAccount(line: string): Account | null {
+  const match = line.match(/account\[\s*(.*?)\s*,\s*"(.*?)"\s*,\s*"(.*?)"\s*\]/);
+  if (!match) return null;
+  return {
+    id: match[1].trim(),
+    name: match[2],
+    email: match[3]
+  };
+}
+
+export function parseTransaction(line: string): Transaction | null {
+  const match = line.match(/iou\[(.*?),\s*(.*?),\s*(.*?),\s*([\d.]+),\s*"(.*?)"\]/);
+  if (!match) return null;
+  return {
+    amount: parseFloat(match[1]),
+    from: match[2].trim(),
+    to: match[3].trim(),
+    date: match[4],
+    description: match[5]
+  };
+}
+
+export function parseInterestRate(line: string): { date: string; rate: number } | null {
+  const match = line.match(/irate\[([\d.]+),\s*([\d.]+)\]/);
+  if (!match) return null;
+  return {
+    date: match[1],
+    rate: parseFloat(match[2])
+  };
+}
 
 async function fetchFromEtherpad(name: string): Promise<string> {
   const response = await fetch(`https://padm.us/yl-${name}/export/txt`);
