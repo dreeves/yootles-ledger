@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import type { Ledger, Transaction, Account } from '$lib/types/ledger';
 
-function parseAccount(line: string): Account | null {
+export function parseAccount(line: string): Account | null {
   const match = line.match(/account\[(.*?),\s*"(.*?)",\s*"(.*?)"\]/);
   if (!match) return null;
   return {
@@ -12,7 +12,7 @@ function parseAccount(line: string): Account | null {
   };
 }
 
-function parseTransaction(line: string): Transaction | null {
+export function parseTransaction(line: string): Transaction | null {
   const match = line.match(/iou\[(.*?),\s*(.*?),\s*(.*?),\s*([\d.]+),\s*"(.*?)"\]/);
   if (!match) return null;
   return {
@@ -24,7 +24,7 @@ function parseTransaction(line: string): Transaction | null {
   };
 }
 
-function parseInterestRate(line: string): { date: string; rate: number } | null {
+export function parseInterestRate(line: string): { date: string; rate: number } | null {
   const match = line.match(/irate\[([\d.]+),\s*([\d.]+)\]/);
   if (!match) return null;
   return {
@@ -33,16 +33,47 @@ function parseInterestRate(line: string): { date: string; rate: number } | null 
   };
 }
 
-function formatAccount(account: Account): string {
-  return `account[${account.id}, "${account.name}", "${account.email}"]`;
-}
-
-function formatTransaction(tx: Transaction): string {
-  return `iou[${tx.amount}, ${tx.from}, ${tx.to}, ${tx.date}, "${tx.description}"]`;
-}
-
-function formatInterestRate(rate: { date: string; rate: number }): string {
-  return `irate[${rate.date}, ${rate.rate}]`;
+function validateLedger(ledger: Ledger): void {
+  // Validate accounts
+  if (!Array.isArray(ledger.accounts)) {
+    throw new Error('Ledger accounts must be an array');
+  }
+  
+  const accountIds = new Set(ledger.accounts.map(a => a.id));
+  
+  // Validate transactions
+  if (!Array.isArray(ledger.transactions)) {
+    throw new Error('Ledger transactions must be an array');
+  }
+  
+  for (const tx of ledger.transactions) {
+    if (!accountIds.has(tx.from)) {
+      throw new Error(`Transaction references unknown account: ${tx.from}`);
+    }
+    if (!accountIds.has(tx.to)) {
+      throw new Error(`Transaction references unknown account: ${tx.to}`);
+    }
+    if (isNaN(tx.amount) || tx.amount <= 0) {
+      throw new Error(`Invalid transaction amount: ${tx.amount}`);
+    }
+    if (!/^\d{4}\.\d{2}\.\d{2}$/.test(tx.date)) {
+      throw new Error(`Invalid transaction date format: ${tx.date}`);
+    }
+  }
+  
+  // Validate interest rates
+  if (!Array.isArray(ledger.interestRates)) {
+    throw new Error('Ledger interest rates must be an array');
+  }
+  
+  for (const rate of ledger.interestRates) {
+    if (!/^\d{4}\.\d{2}\.\d{2}$/.test(rate.date)) {
+      throw new Error(`Invalid interest rate date format: ${rate.date}`);
+    }
+    if (isNaN(rate.rate) || rate.rate < 0) {
+      throw new Error(`Invalid interest rate: ${rate.rate}`);
+    }
+  }
 }
 
 export async function loadLedger(name: string): Promise<Ledger> {
@@ -90,12 +121,17 @@ export async function loadLedger(name: string): Promise<Ledger> {
       }
     }
 
-    return {
+    const ledger = {
       id: name,
       accounts,
       transactions,
       interestRates
     };
+
+    // Validate the loaded ledger
+    validateLedger(ledger);
+
+    return ledger;
   } catch (error) {
     if (error.message === 'Invalid ledger name') {
       throw error;
@@ -107,6 +143,9 @@ export async function loadLedger(name: string): Promise<Ledger> {
 
 export async function saveLedger(name: string, ledger: Ledger): Promise<void> {
   try {
+    // Validate before saving
+    validateLedger(ledger);
+
     const filePath = join(process.cwd(), '..', 'data', `${name}-snapshot.txt`);
     
     const lines: string[] = [];
