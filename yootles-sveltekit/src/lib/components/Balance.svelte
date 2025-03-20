@@ -59,16 +59,16 @@
 </script>
 
 <div class="balance-display p-4 bg-white shadow rounded-lg">
-  <div class="flex justify-between items-center mb-4">
+  <div class="flex justify-between items-center mb-6">
     <div>
       <h2 class="text-xl font-semibold">Current Balances</h2>
       {#if currentRate > 0}
-        <p class="text-sm text-gray-500">
+        <p class="text-sm text-gray-500 mt-1">
           Current interest rate: {formatPercent(currentRate)}
         </p>
       {/if}
     </div>
-    <div class="space-x-2">
+    <div class="flex gap-2">
       <a 
         href="/{data.ledger.id}/history" 
         class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
@@ -96,46 +96,53 @@
   </div>
 
   {#if lastError}
-    <div class="mb-4 p-3 bg-red-100 text-red-700 rounded">
+    <div class="mb-6 p-3 bg-red-100 text-red-700 rounded">
       {lastError}
     </div>
   {/if}
 
-  <div class="space-y-2">
+  <div class="grid gap-4 grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))] auto-rows-fr">
     {#each data.ledger.accounts as account}
       {@const principal = account.balance - account.interestAccrued}
-      <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded border">
-        <div class="flex flex-col">
-          <span class="font-medium">{account.name}</span>
+      <div class="p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors h-full">
+        <div class="mb-3">
+          <h3 class="font-medium text-gray-900 break-words">{account.name}</h3>
           {#if account.email}
-            <span class="text-sm text-gray-500">{account.email}</span>
+            <p class="text-sm text-gray-500 break-words">{account.email}</p>
           {/if}
         </div>
-        <div class="flex flex-col items-end">
-          <div class="flex items-center gap-2">
-            <span class="text-sm text-gray-500">Principal:</span>
+
+        <div class="space-y-2">
+          <div class="flex justify-between items-baseline text-sm">
+            <span class="text-gray-600">Principal:</span>
             <span class={principal >= 0 ? 'text-green-600' : 'text-red-600'}>
               {formatCurrency(principal)}
             </span>
           </div>
+
           {#if account.interestAccrued !== 0}
-            <div class="flex items-center gap-2">
-              <span class="text-sm text-gray-500">Interest:</span>
-              <span class={account.interestAccrued >= 0 ? 'text-green-600' : 'text-red-600'}>
-                {formatCurrency(account.interestAccrued)}
+            <div class="flex justify-between items-baseline text-sm">
+              <span class="text-gray-600">Interest:</span>
+              <div class="text-right">
+                <span class={account.interestAccrued >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  {formatCurrency(account.interestAccrued)}
+                </span>
                 {#if principal !== 0}
                   <span class="text-xs text-gray-500 ml-1">
                     ({calculateInterestPercent(principal, account.interestAccrued)})
                   </span>
                 {/if}
-              </span>
+              </div>
             </div>
           {/if}
-          <div class="flex items-center gap-2 font-medium mt-1 pt-1 border-t">
-            <span class="text-sm text-gray-500">Total:</span>
-            <span class={account.balance >= 0 ? 'text-green-600' : 'text-red-600'}>
-              {formatCurrency(account.balance)}
-            </span>
+
+          <div class="pt-2 mt-2 border-t border-gray-100">
+            <div class="flex justify-between items-baseline">
+              <span class="font-medium text-gray-900">Total:</span>
+              <span class={`font-medium ${account.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(account.balance)}
+              </span>
+            </div>
           </div>
         </div>
       </div>
