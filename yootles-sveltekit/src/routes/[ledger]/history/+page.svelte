@@ -3,12 +3,12 @@
 	import Chart from 'chart.js/auto';
 	import type { Ledger } from '$lib/types/ledger';
 	import DateRangeFilter from '$lib/components/DateRangeFilter.svelte';
+	import TransactionsTable from '$lib/components/TransactionsTable.svelte';
 	import {
 		formatCurrency,
 		formatPercent,
 		formatDate,
-		parseDateFromInput,
-		formatDateForInput
+		parseDateFromInput
 	} from '$lib/utils/formatting';
 
 	export let data: { ledger: Ledger };
@@ -44,17 +44,7 @@
 			}
 			return true;
 		})
-		.sort((a, b) => b.date.localeCompare(a.date));
-
-	$: chronologicalTransactions = [...filteredTransactions].sort((a, b) =>
-		a.date.localeCompare(b.date)
-	);
-
-	$: sortedInterestRates = [...data.ledger.interestRates].sort((a, b) =>
-		b.date.localeCompare(a.date)
-	);
-
-	$: currentRate = sortedInterestRates[0]?.rate ?? 0;
+		.sort((a, b) => b.date.localeCompare(a.date)); // Sort descending for display
 
 	$: if (chartCanvas && selectedAccount) {
 		isCalculating = true;
@@ -252,12 +242,6 @@
 			chart = null;
 		}
 	});
-
-	$: if (data.ledger.transactions.length > 0 && !startDate && !endDate) {
-		const dates = data.ledger.transactions.map((tx) => tx.date);
-		startDate = formatDateForInput(dates.reduce((a, b) => (a < b ? a : b)));
-		endDate = formatDateForInput(dates.reduce((a, b) => (a > b ? a : b)));
-	}
 </script>
 
 <div class="p-4">
@@ -305,68 +289,13 @@
 					No transactions found in the selected date range
 				</div>
 			{:else}
-				<div class="mt-8 overflow-x-auto">
-					<table class="min-w-full divide-y divide-gray-200">
-						<thead class="bg-gray-50">
-							<tr>
-								<th
-									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-									>Date</th
-								>
-								<th
-									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-									>Type</th
-								>
-								<th
-									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-									>Amount</th
-								>
-								<th
-									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-									>Balance</th
-								>
-								<th
-									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-									>Interest</th
-								>
-								<th
-									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-									>Description</th
-								>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-gray-200 bg-white">
-							{#each filteredTransactions as tx (tx.date + tx.from + tx.to + tx.amount)}
-								{@const previousTransactions = chronologicalTransactions.slice(
-									0,
-									chronologicalTransactions.indexOf(tx) + 1
-								)}
-								{@const runningBalance = previousTransactions.reduce((sum, t) => {
-									if (t.from === selectedAccount) return sum - t.amount;
-									if (t.to === selectedAccount) return sum + t.amount;
-									return sum;
-								}, 0)}
-								<tr>
-									<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500"
-										>{formatDate(tx.date)}</td
-									>
-									<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-										{tx.from === selectedAccount ? 'Debit' : 'Credit'}
-									</td>
-									<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-										{formatCurrency(tx.amount)}
-									</td>
-									<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-										{formatCurrency(runningBalance)}
-									</td>
-									<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-										{currentRate > 0 ? formatPercent(currentRate) : '-'}
-									</td>
-									<td class="px-6 py-4 text-sm text-gray-500">{tx.description}</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
+				<div class="mt-8">
+					<TransactionsTable
+						ledger={data.ledger}
+						transactions={filteredTransactions}
+						{selectedAccount}
+						showBalances={true}
+					/>
 				</div>
 			{/if}
 		</div>

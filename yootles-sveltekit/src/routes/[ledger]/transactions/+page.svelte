@@ -1,12 +1,8 @@
 <script lang="ts">
 	import type { Ledger } from '$lib/types/ledger';
 	import DateRangeFilter from '$lib/components/DateRangeFilter.svelte';
-	import {
-		formatCurrency,
-		formatPercent,
-		formatDate,
-		parseDateFromInput
-	} from '$lib/utils/formatting';
+	import TransactionsTable from '$lib/components/TransactionsTable.svelte';
+	import { formatCurrency, formatPercent, parseDateFromInput } from '$lib/utils/formatting';
 
 	export let data: { ledger: Ledger };
 
@@ -150,7 +146,7 @@
 							{#each sortedInterestRates as rate (rate.date)}
 								<tr class="hover:bg-gray-50">
 									<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-										{formatDate(rate.date)}
+										{rate.date}
 									</td>
 									<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 										{formatPercent(rate.rate)}
@@ -165,68 +161,6 @@
 	{/if}
 
 	<div class="overflow-hidden rounded-lg bg-white shadow">
-		<div class="overflow-x-auto">
-			<table class="min-w-full divide-y divide-gray-200">
-				<thead class="bg-gray-50">
-					<tr>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>
-							Date
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>
-							From
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>
-							To
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>
-							Amount
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-						>
-							Description
-						</th>
-					</tr>
-				</thead>
-				<tbody class="divide-y divide-gray-200 bg-white">
-					{#each sortedTransactions as tx (tx.date + tx.from + tx.to + tx.amount)}
-						<tr class="hover:bg-gray-50">
-							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-								{formatDate(tx.date)}
-							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-								{data.ledger.accounts.find((a) => a.id === tx.from)?.name || tx.from}
-							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-								{data.ledger.accounts.find((a) => a.id === tx.to)?.name || tx.to}
-							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-								{formatCurrency(tx.amount)}
-							</td>
-							<td class="px-6 py-4 text-sm text-gray-500">
-								{tx.description}
-							</td>
-						</tr>
-					{/each}
-					{#if sortedTransactions.length === 0}
-						<tr>
-							<td colspan="5" class="px-6 py-4 text-center text-gray-500">
-								{selectedAccount
-									? 'No transactions found for selected account'
-									: 'No transactions found'}
-							</td>
-						</tr>
-					{/if}
-				</tbody>
-			</table>
-		</div>
+		<TransactionsTable ledger={data.ledger} transactions={sortedTransactions} {selectedAccount} />
 	</div>
 </div>
