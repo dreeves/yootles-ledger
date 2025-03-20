@@ -27,16 +27,52 @@ export class LedgerProcessor {
     };
   }
 
+  private evaluateExpression(expr: string): number {
+    expr = expr.replace(/(\d+)\/(\d+)/g, '($1/$2)');
+    try {
+      return new Function(`return ${expr}`)();
+    } catch (e) {
+      console.error('Failed to evaluate expression:', expr);
+      return 0;
+    }
+  }
+
   parseTransaction(line: string): Transaction | null {
-    const match = line.match(/iou\[\s*([\d.]+)\s*,\s*(.*?)\s*,\s*(.*?)\s*,\s*([\d.]+)\s*,\s*"(.*?)"\s*\]/);
-    if (!match) return null;
-    return {
-      amount: parseFloat(match[1]),
-      from: match[2].trim(),
-      to: match[3].trim(),
-      date: match[4],
-      description: match[5]
-    };
+    let match = line.match(/iou\[\s*([\d.]+)\s*,\s*([^,]+)\s*,\s*(.*?)\s*,\s*(.*?)\s*,\s*"(.*?)"\s*\]/);
+    if (match) {
+      const amountExpr = match[2].trim();
+      const amount = amountExpr.includes('*') || amountExpr.includes('/')
+        ? this.evaluateExpression(amountExpr)
+        : parseFloat(amountExpr);
+
+      return {
+        date: match[1],
+        amount,
+        from: match[3].trim(),
+        to: match[4].trim(),
+        description: match[5]
+      };
+    }
+
+    match = line.match(/iouMonthly\[\s*([\d.]+)\s*,\s*([\d.]+|INDEFINITE)\s*,\s*([\d.]+)\s*,\s*(.*?)\s*,\s*(.*?)\s*,\s*"(.*?)"\s*\]/);
+    if (match) {
+      const endDate = match[2] === 'INDEFINITE' 
+        ? new Date().toISOString().split('T')[0].replace(/-/g, '.')
+        : match[2];
+
+      return {
+        date: endDate,
+        amount: parseFloat(match[3]),
+        from: match[4].trim(),
+        to: match[5].trim(),
+        description: match[6]
+      };
+    }
+
+    if (line.includes('iou[') || line.includes('iouMonthly[')) {
+      console.error('Failed to parse transaction:', line);
+    }
+    return null;
   }
 
   parseInterestRate(line: string): InterestRate | null {
@@ -83,6 +119,8 @@ export class LedgerProcessor {
       ...this.interestRates.map(r => ({ type: 'rate' as const, date: r.date, data: r }))
     ].sort((a, b) => a.date.localeCompare(b.date));
 
+    console.error('Processing events:', allEvents);
+
     for (const event of allEvents) {
       if (lastDate && currentRate > 0) {
         const years = this.dateDiffInYears(lastDate, event.date);
@@ -93,10 +131,19 @@ export class LedgerProcessor {
 
       if (event.type === 'rate') {
         currentRate = event.data.rate;
+        console.error('Updated interest rate:', { date: event.date, rate: currentRate });
       } else {
         const tx = event.data;
         balances.set(tx.from, balances.get(tx.from)! - tx.amount);
         balances.set(tx.to, balances.get(tx.to)! + tx.amount);
+        console.error('Applied transaction:', { 
+          date: tx.date, 
+          amount: tx.amount, 
+          from: tx.from, 
+          to: tx.to,
+          newFromBalance: balances.get(tx.from),
+          newToBalance: balances.get(tx.to)
+        });
       }
 
       lastDate = event.date;
@@ -127,25 +174,34 @@ export class LedgerProcessor {
       }
       if (reachedEnd) continue;
 
-      if (!trimmed || trimmed.startsWith('#')) continue;
+      if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('(*')) continue;
 
       const account = this.parseAccount(trimmed);
       if (account) {
         this.accounts.push(account);
+        console.error('Added account:', account);
         continue;
       }
 
       const transaction = this.parseTransaction(trimmed);
       if (transaction) {
         this.transactions.push(transaction);
+        console.error('Added transaction:', transaction);
         continue;
       }
 
       const rate = this.parseInterestRate(trimmed);
       if (rate) {
         this.interestRates.push(rate);
+        console.error('Added interest rate:', rate);
       }
     }
+
+    console.error('Parsed ledger:', {
+      accounts: this.accounts,
+      transactions: this.transactions,
+      interestRates: this.interestRates
+    });
 
     const balances = this.calculateBalances();
 
