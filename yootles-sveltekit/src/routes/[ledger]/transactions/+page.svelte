@@ -3,6 +3,9 @@
   
   export let data: { ledger: Ledger };
 
+  let selectedAccount: string = '';
+  let sortDirection: 'asc' | 'desc' = 'desc';
+
   function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -13,6 +16,20 @@
   function formatDate(date: string): string {
     const [year, month, day] = date.split('.');
     return new Date(+year, +month - 1, +day).toLocaleDateString();
+  }
+
+  $: filteredTransactions = data.ledger.transactions.filter(tx => 
+    !selectedAccount || tx.from === selectedAccount || tx.to === selectedAccount
+  );
+
+  $: sortedTransactions = [...filteredTransactions].sort((a, b) => 
+    sortDirection === 'desc' 
+      ? b.date.localeCompare(a.date)
+      : a.date.localeCompare(b.date)
+  );
+
+  function toggleSort() {
+    sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
   }
 </script>
 
@@ -38,6 +55,34 @@
     </div>
   </header>
 
+  <div class="mb-6 flex gap-4 items-center">
+    <div class="flex-1">
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        Filter by Account
+      </label>
+      <select
+        bind:value={selectedAccount}
+        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+      >
+        <option value="">All Accounts</option>
+        {#each data.ledger.accounts as account}
+          <option value={account.id}>{account.name}</option>
+        {/each}
+      </select>
+    </div>
+    <div class="flex-1">
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        Sort Order
+      </label>
+      <button
+        on:click={toggleSort}
+        class="mt-1 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+      >
+        {sortDirection === 'desc' ? '↓ Newest First' : '↑ Oldest First'}
+      </button>
+    </div>
+  </div>
+
   <div class="bg-white shadow rounded-lg overflow-hidden">
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">
@@ -61,7 +106,7 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          {#each data.ledger.transactions.sort((a, b) => b.date.localeCompare(a.date)) as tx}
+          {#each sortedTransactions as tx}
             <tr class="hover:bg-gray-50">
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {formatDate(tx.date)}
@@ -80,6 +125,15 @@
               </td>
             </tr>
           {/each}
+          {#if sortedTransactions.length === 0}
+            <tr>
+              <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                {selectedAccount 
+                  ? "No transactions found for selected account" 
+                  : "No transactions found"}
+              </td>
+            </tr>
+          {/if}
         </tbody>
       </table>
     </div>
