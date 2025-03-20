@@ -65,11 +65,11 @@
 </script>
 
 <div class="balance-display h-full overflow-auto rounded-lg bg-white p-4 shadow">
-  <div class="sticky top-0 z-10 mb-6 flex items-center justify-between bg-white">
+  <div class="sticky top-0 z-10 mb-4 flex items-center justify-between bg-white">
     <div>
       <h2 class="text-xl font-semibold">Current Balances</h2>
       {#if currentRate > 0}
-        <p class="mt-1 text-sm text-gray-500">
+        <p class="mt-0.5 text-sm text-gray-500">
           Current interest rate: {formatPercent(currentRate)}
         </p>
       {/if}
@@ -89,27 +89,27 @@
   </div>
 
   {#if lastError}
-    <div class="mb-6 rounded bg-red-100 p-3 text-red-700">
+    <div class="mb-4 rounded bg-red-100 p-3 text-red-700">
       {lastError}
     </div>
   {/if}
 
   <div
-    class="grid auto-rows-fr grid-cols-1 gap-4 md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]"
+    class="grid auto-rows-fr grid-cols-1 gap-3 md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]"
   >
     {#each data.ledger.accounts as account (account.id)}
       {@const principal = account.balance - account.interestAccrued}
       <div
-        class="h-full rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300"
+        class="rounded-lg border border-gray-200 p-3 transition-colors hover:border-gray-300"
       >
-        <div class="mb-3">
+        <div class="mb-2">
           <h3 class="font-medium break-words text-gray-900">{account.name}</h3>
           {#if account.email}
             <p class="text-sm break-words text-gray-500">{account.email}</p>
           {/if}
         </div>
 
-        <div class="space-y-2">
+        <div class="space-y-1.5">
           <div class="flex items-baseline justify-between text-sm">
             <span class="text-gray-600">Principal:</span>
             <span class={principal >= 0 ? 'text-green-600' : 'text-red-600'}>
@@ -133,7 +133,7 @@
             </div>
           {/if}
 
-          <div class="mt-2 border-t border-gray-100 pt-2">
+          <div class="mt-1.5 border-t border-gray-100 pt-1.5">
             <div class="flex items-baseline justify-between">
               <span class="font-medium text-gray-900">Total:</span>
               <span
