@@ -62,32 +62,68 @@
 			? data.ledger.interestRates[data.ledger.interestRates.length - 1].rate
 			: 0;
 
+	function dateDiffInYears(fromDate: string, toDate: string): number {
+		const [fromYear, fromMonth, fromDay] = fromDate.split('.').map(Number);
+		const [toYear, toMonth, toDay] = toDate.split('.').map(Number);
+
+		const from = new Date(fromYear, fromMonth - 1, fromDay);
+		const to = new Date(toYear, toMonth - 1, toDay);
+
+		return (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+	}
+
 	let allAccounts: CombinedAccount[] = [
 		...data.ledger.accounts,
 		...(data.ledger.unregisteredAccounts?.map((ua) => {
-			// Find all transactions involving this account
-			const transactions = data.ledger.transactions.filter(
-				(tx) => tx.from === ua.id || tx.to === ua.id
-			);
+			// Sort all events (transactions and interest rate changes) by date
+			const allEvents = [
+				...data.ledger.transactions
+					.filter((tx) => tx.from === ua.id || tx.to === ua.id)
+					.map((tx) => ({ type: 'transaction' as const, date: tx.date, data: tx })),
+				...data.ledger.interestRates.map((r) => ({ type: 'rate' as const, date: r.date, data: r }))
+			].sort((a, b) => a.date.localeCompare(b.date));
 
-			// Calculate total balance and interest
-			const { balance, interestAccrued } = transactions.reduce(
-				(acc, tx) => {
+			let balance = 0;
+			let interestAccrued = 0;
+			let currentRate = 0;
+			let lastDate = '';
+
+			// Process all events chronologically
+			for (const event of allEvents) {
+				// Calculate interest since last event if there's a rate
+				if (lastDate && currentRate > 0) {
+					const years = dateDiffInYears(lastDate, event.date);
+					const interest = balance * currentRate * years;
+					balance = balance * (1 + currentRate * years);
+					interestAccrued += interest;
+				}
+
+				if (event.type === 'rate') {
+					currentRate = event.data.rate;
+				} else {
+					const tx = event.data;
 					if (tx.from === ua.id) {
-						return {
-							balance: acc.balance - tx.amount,
-							// For now, we don't have a way to calculate interest for unregistered accounts
-							interestAccrued: 0
-						};
+						balance -= tx.amount;
 					} else {
-						return {
-							balance: acc.balance + tx.amount,
-							interestAccrued: 0
-						};
+						balance += tx.amount;
 					}
-				},
-				{ balance: 0, interestAccrued: 0 }
-			);
+				}
+
+				lastDate = event.date;
+			}
+
+			// Calculate final interest up to today if there's a current rate
+			if (currentRate > 0 && lastDate) {
+				const today = new Date().toISOString().split('T')[0].replace(/-/g, '.');
+				const years = dateDiffInYears(lastDate, today);
+				const interest = balance * currentRate * years;
+				balance = balance * (1 + currentRate * years);
+				interestAccrued += interest;
+			}
+
+			// Round to 2 decimal places
+			balance = Math.round(balance * 100) / 100;
+			interestAccrued = Math.round(interestAccrued * 100) / 100;
 
 			return {
 				id: ua.id,
@@ -105,29 +141,55 @@
 		allAccounts = [
 			...data.ledger.accounts,
 			...(data.ledger.unregisteredAccounts?.map((ua) => {
-				// Find all transactions involving this account
-				const transactions = data.ledger.transactions.filter(
-					(tx) => tx.from === ua.id || tx.to === ua.id
-				);
+				// Sort all events (transactions and interest rate changes) by date
+				const allEvents = [
+					...data.ledger.transactions
+						.filter((tx) => tx.from === ua.id || tx.to === ua.id)
+						.map((tx) => ({ type: 'transaction' as const, date: tx.date, data: tx })),
+					...data.ledger.interestRates.map((r) => ({ type: 'rate' as const, date: r.date, data: r }))
+				].sort((a, b) => a.date.localeCompare(b.date));
 
-				// Calculate total balance and interest
-				const { balance, interestAccrued } = transactions.reduce(
-					(acc, tx) => {
+				let balance = 0;
+				let interestAccrued = 0;
+				let currentRate = 0;
+				let lastDate = '';
+
+				// Process all events chronologically
+				for (const event of allEvents) {
+					// Calculate interest since last event if there's a rate
+					if (lastDate && currentRate > 0) {
+						const years = dateDiffInYears(lastDate, event.date);
+						const interest = balance * currentRate * years;
+						balance = balance * (1 + currentRate * years);
+						interestAccrued += interest;
+					}
+
+					if (event.type === 'rate') {
+						currentRate = event.data.rate;
+					} else {
+						const tx = event.data;
 						if (tx.from === ua.id) {
-							return {
-								balance: acc.balance - tx.amount,
-								// For now, we don't have a way to calculate interest for unregistered accounts
-								interestAccrued: 0
-							};
+							balance -= tx.amount;
 						} else {
-							return {
-								balance: acc.balance + tx.amount,
-								interestAccrued: 0
-							};
+							balance += tx.amount;
 						}
-					},
-					{ balance: 0, interestAccrued: 0 }
-				);
+					}
+
+					lastDate = event.date;
+				}
+
+				// Calculate final interest up to today if there's a current rate
+				if (currentRate > 0 && lastDate) {
+					const today = new Date().toISOString().split('T')[0].replace(/-/g, '.');
+					const years = dateDiffInYears(lastDate, today);
+					const interest = balance * currentRate * years;
+					balance = balance * (1 + currentRate * years);
+					interestAccrued += interest;
+				}
+
+				// Round to 2 decimal places
+				balance = Math.round(balance * 100) / 100;
+				interestAccrued = Math.round(interestAccrued * 100) / 100;
 
 				return {
 					id: ua.id,
