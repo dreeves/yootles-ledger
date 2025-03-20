@@ -24,4 +24,5 @@ export interface Ledger {
     date: string;
     rate: number;
   }>;
+  error?: string;
 }

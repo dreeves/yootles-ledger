@@ -24,7 +24,13 @@
 </script>
 
 <div class="container mx-auto px-4">
-	{#if isEmpty}
+	{#if data.error}
+		<div class="mt-4 rounded-lg bg-red-50 p-4 text-red-700">
+			<p class="font-medium">Warning: Your ledger has syntax errors</p>
+			<p class="mt-1">{data.error}</p>
+			<p class="mt-1">Please check the editor below for details.</p>
+		</div>
+	{:else if isEmpty}
 		<p class="mt-4 text-gray-600">
 			This is a new ledger. Use the editor below to add accounts and transactions.
 		</p>

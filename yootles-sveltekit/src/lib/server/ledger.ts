@@ -25,7 +25,7 @@ export async function loadLedger(name: string): Promise<Ledger> {
 			const processor = new LedgerProcessor();
 			const result = processor.processLedger(content);
 
-			if (!result.accounts.length) {
+			if (!result.accounts.length && !result.error) {
 				throw new Error('NO_ACCOUNTS');
 			}
 
@@ -43,6 +43,10 @@ export async function loadLedger(name: string): Promise<Ledger> {
 				}
 				if (fileError.message === 'NO_ACCOUNTS') {
 					throw new Error('NO_ACCOUNTS');
+				}
+				// Pass through parsing errors
+				if (fileError.message.startsWith('Parse error')) {
+					throw fileError;
 				}
 			}
 			console.error('File read error:', {

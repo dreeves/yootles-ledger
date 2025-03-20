@@ -223,59 +223,78 @@ export class LedgerProcessor {
 		}));
 	}
 
-	processLedger(content: string): Ledger {
+	processLedger(content: string): Ledger & { error?: string } {
 		this.accounts = [];
 		this.transactions = [];
 		this.interestRates = [];
 
 		const lines = content.split('\n');
 		let reachedEnd = false;
+		let lineNumber = 0;
 
-		for (const line of lines) {
-			const trimmed = line.trim();
+		try {
+			for (const line of lines) {
+				lineNumber++;
+				const trimmed = line.trim();
 
-			if (trimmed === '[MAGIC_LEDGER_END]') {
-				reachedEnd = true;
-				continue;
+				if (trimmed === '[MAGIC_LEDGER_END]') {
+					reachedEnd = true;
+					continue;
+				}
+				if (reachedEnd) continue;
+
+				if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('(*')) continue;
+
+				const account = this.parseAccount(trimmed);
+				if (account) {
+					this.accounts.push(account);
+					continue;
+				}
+
+				const transaction = this.parseTransaction(trimmed);
+				if (transaction) {
+					this.transactions.push(transaction);
+					continue;
+				}
+
+				const rate = this.parseInterestRate(trimmed);
+				if (rate) {
+					this.interestRates.push(rate);
+					continue;
+				}
+
+				// If we get here and the line looks like it was meant to be parsed,
+				// it's probably a syntax error
+				if (trimmed.includes('account[') || trimmed.includes('iou[') || trimmed.includes('irate[')) {
+					throw new Error(`Invalid syntax at line ${lineNumber}: ${trimmed}`);
+				}
 			}
-			if (reachedEnd) continue;
 
-			if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('(*')) continue;
+			const balances = this.calculateBalances();
 
-			const account = this.parseAccount(trimmed);
-			if (account) {
-				this.accounts.push(account);
-				continue;
-			}
+			const accountsWithBalances = this.accounts.map((account) => {
+				const balance = balances.find((b) => b.id === account.id);
+				return {
+					...account,
+					balance: balance?.balance ?? 0,
+					interestAccrued: balance?.interestAccrued ?? 0
+				};
+			});
 
-			const transaction = this.parseTransaction(trimmed);
-			if (transaction) {
-				this.transactions.push(transaction);
-				continue;
-			}
-
-			const rate = this.parseInterestRate(trimmed);
-			if (rate) {
-				this.interestRates.push(rate);
-			}
-		}
-
-		const balances = this.calculateBalances();
-
-		const accountsWithBalances = this.accounts.map((account) => {
-			const balance = balances.find((b) => b.id === account.id);
 			return {
-				...account,
-				balance: balance?.balance ?? 0,
-				interestAccrued: balance?.interestAccrued ?? 0
+				id: 'local',
+				accounts: accountsWithBalances,
+				transactions: this.transactions,
+				interestRates: this.interestRates
 			};
-		});
-
-		return {
-			id: 'local',
-			accounts: accountsWithBalances,
-			transactions: this.transactions,
-			interestRates: this.interestRates
-		};
+		} catch (error) {
+			return {
+				id: 'local',
+				accounts: [],
+				transactions: [],
+				interestRates: [],
+				error: error instanceof Error ? error.message : String(error)
+			};
+		}
 	}
 }

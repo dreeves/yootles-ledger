@@ -3,7 +3,7 @@
 	import type { Socket } from 'socket.io-client';
 	import { onMount } from 'svelte';
 
-	export let data: { ledger: Ledger };
+	export let data: { ledger: Ledger; error?: string };
 	export let socket: Socket;
 
 	let lastUpdate = 0;
@@ -27,6 +27,14 @@
 	<div class="border-b p-4">
 		<h2 class="text-xl font-semibold">Ledger Editor</h2>
 	</div>
+
+	{#if data.error}
+		<div class="border-b bg-red-50 p-4 text-red-700">
+			<p class="font-medium">Error in ledger syntax:</p>
+			<p class="mt-1">{data.error}</p>
+		</div>
+	{/if}
+
 	<iframe
 		src="https://padm.us/yl-{data.ledger.id}"
 		style="width: 100%; height: 600px; border: none;"
