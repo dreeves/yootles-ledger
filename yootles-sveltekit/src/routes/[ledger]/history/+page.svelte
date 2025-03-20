@@ -71,7 +71,9 @@
       }
       return true;
     })
-    .sort((a, b) => a.date.localeCompare(b.date));
+    .sort((a, b) => b.date.localeCompare(a.date)); // Sort descending for display
+
+  $: chronologicalTransactions = [...filteredTransactions].sort((a, b) => a.date.localeCompare(b.date));
 
   $: sortedInterestRates = [...data.ledger.interestRates].sort((a, b) => 
     b.date.localeCompare(a.date)
@@ -366,7 +368,7 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
               {#each filteredTransactions as tx, i}
-                {@const previousTransactions = filteredTransactions.slice(0, i + 1)}
+                {@const previousTransactions = chronologicalTransactions.slice(0, chronologicalTransactions.indexOf(tx) + 1)}
                 {@const runningBalance = previousTransactions.reduce((sum, t) => {
                   if (t.from === selectedAccount) return sum - t.amount;
                   if (t.to === selectedAccount) return sum + t.amount;
