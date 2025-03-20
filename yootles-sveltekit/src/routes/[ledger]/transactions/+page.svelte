@@ -5,6 +5,8 @@
 
   let selectedAccount: string = '';
   let sortDirection: 'asc' | 'desc' = 'desc';
+  let startDate: string = '';
+  let endDate: string = '';
 
   function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-US', {
@@ -18,9 +20,29 @@
     return new Date(+year, +month - 1, +day).toLocaleDateString();
   }
 
-  $: filteredTransactions = data.ledger.transactions.filter(tx => 
-    !selectedAccount || tx.from === selectedAccount || tx.to === selectedAccount
-  );
+  function formatDateForInput(date: string): string {
+    const [year, month, day] = date.split('.');
+    return `${year}-${month}-${day}`;
+  }
+
+  function parseDateFromInput(date: string): string {
+    if (!date) return '';
+    const [year, month, day] = date.split('-');
+    return `${year}.${month}.${day}`;
+  }
+
+  $: filteredTransactions = data.ledger.transactions.filter(tx => {
+    if (selectedAccount && tx.from !== selectedAccount && tx.to !== selectedAccount) {
+      return false;
+    }
+    if (startDate && tx.date < parseDateFromInput(startDate)) {
+      return false;
+    }
+    if (endDate && tx.date > parseDateFromInput(endDate)) {
+      return false;
+    }
+    return true;
+  });
 
   $: sortedTransactions = [...filteredTransactions].sort((a, b) => 
     sortDirection === 'desc' 
@@ -28,8 +50,23 @@
       : a.date.localeCompare(b.date)
   );
 
+  $: statistics = {
+    totalAmount: filteredTransactions.reduce((sum, tx) => sum + tx.amount, 0),
+    count: filteredTransactions.length,
+    averageAmount: filteredTransactions.length 
+      ? filteredTransactions.reduce((sum, tx) => sum + tx.amount, 0) / filteredTransactions.length 
+      : 0
+  };
+
   function toggleSort() {
     sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+  }
+
+  // Initialize date range if there are transactions
+  $: if (data.ledger.transactions.length > 0 && !startDate && !endDate) {
+    const dates = data.ledger.transactions.map(tx => tx.date);
+    startDate = formatDateForInput(dates.reduce((a, b) => a < b ? a : b));
+    endDate = formatDateForInput(dates.reduce((a, b) => a > b ? a : b));
   }
 </script>
 
@@ -55,8 +92,8 @@
     </div>
   </header>
 
-  <div class="mb-6 flex gap-4 items-center">
-    <div class="flex-1">
+  <div class="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">
         Filter by Account
       </label>
@@ -70,7 +107,30 @@
         {/each}
       </select>
     </div>
-    <div class="flex-1">
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        Start Date
+      </label>
+      <input
+        type="date"
+        bind:value={startDate}
+        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        End Date
+      </label>
+      <input
+        type="date"
+        bind:value={endDate}
+        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+      />
+    </div>
+
+    <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">
         Sort Order
       </label>
@@ -80,6 +140,21 @@
       >
         {sortDirection === 'desc' ? '↓ Newest First' : '↑ Oldest First'}
       </button>
+    </div>
+  </div>
+
+  <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white p-4 rounded-lg shadow">
+      <h3 class="text-sm font-medium text-gray-500">Total Transactions</h3>
+      <p class="mt-1 text-2xl font-semibold text-gray-900">{statistics.count}</p>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+      <h3 class="text-sm font-medium text-gray-500">Total Amount</h3>
+      <p class="mt-1 text-2xl font-semibold text-gray-900">{formatCurrency(statistics.totalAmount)}</p>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+      <h3 class="text-sm font-medium text-gray-500">Average Amount</h3>
+      <p class="mt-1 text-2xl font-semibold text-gray-900">{formatCurrency(statistics.averageAmount)}</p>
     </div>
   </div>
 
