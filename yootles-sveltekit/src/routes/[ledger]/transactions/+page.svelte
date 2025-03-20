@@ -18,7 +18,16 @@
 
 <div class="container mx-auto px-4 py-8">
   <header class="mb-8">
-    <h1 class="text-3xl font-bold">{data.ledger.id} Transactions</h1>
+    <div class="flex justify-between items-center">
+      <h1 class="text-3xl font-bold">{data.ledger.id} Transactions</h1>
+      <a 
+        href="/api/ledger/{data.ledger.id}/transactions.csv"
+        class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+        download
+      >
+        Download CSV
+      </a>
+    </div>
     <div class="mt-4">
       <a 
         href="/{data.ledger.id}" 
@@ -52,7 +61,7 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          {#each data.ledger.transactions as tx}
+          {#each data.ledger.transactions.sort((a, b) => b.date.localeCompare(a.date)) as tx}
             <tr class="hover:bg-gray-50">
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {formatDate(tx.date)}
