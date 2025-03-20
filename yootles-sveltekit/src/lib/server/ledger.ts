@@ -6,7 +6,7 @@ import { LedgerProcessor } from './processor/LedgerProcessor';
 export async function loadLedger(name: string): Promise<Ledger> {
   try {
     // Validate ledger name
-    if (!name || name === 'socket.io' || !/^[a-zA-Z0-9-_]+$/.test(name)) {
+    if (!name || name === 'socket.io' || !/^[a-zA-Z0-9_-]+$/.test(name)) {
       throw new Error('INVALID_NAME');
     }
 
