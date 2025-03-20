@@ -70,7 +70,13 @@
 		/>
 
 		<div class="rounded-lg bg-white p-4 shadow">
-			<BalanceChart ledger={data.ledger} {selectedAccount} {showPercentages} />
+			<BalanceChart
+				ledger={data.ledger}
+				{selectedAccount}
+				{showPercentages}
+				{startDate}
+				{endDate}
+			/>
 
 			{#if filteredTransactions.length === 0}
 				<div class="py-8 text-center text-gray-500">

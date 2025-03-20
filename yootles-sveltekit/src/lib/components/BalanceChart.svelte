@@ -2,15 +2,29 @@
 	import { onDestroy } from 'svelte';
 	import Chart from 'chart.js/auto';
 	import type { Ledger } from '$lib/types/ledger';
-	import { formatCurrency, formatPercent, formatDate } from '$lib/utils/formatting';
+	import {
+		formatCurrency,
+		formatPercent,
+		formatDate,
+		parseDateFromInput
+	} from '$lib/utils/formatting';
 
 	export let ledger: Ledger;
 	export let selectedAccount: string;
 	export let showPercentages = false;
+	export let startDate: string = '';
+	export let endDate: string = '';
 
 	let chartCanvas: HTMLCanvasElement;
 	let chart: Chart | null = null;
 	let isCalculating = false;
+
+	function isDateInRange(date: string): boolean {
+		if (!startDate && !endDate) return true;
+		if (startDate && date < parseDateFromInput(startDate)) return false;
+		if (endDate && date > parseDateFromInput(endDate)) return false;
+		return true;
+	}
 
 	$: if (chartCanvas && selectedAccount) {
 		isCalculating = true;
@@ -46,7 +60,9 @@
 						date: r.date,
 						data: r
 					}))
-				].sort((a, b) => a.date.localeCompare(b.date));
+				]
+					.sort((a, b) => a.date.localeCompare(b.date))
+					.filter((event) => isDateInRange(event.date));
 
 				const timePoints = [];
 				const principalPoints = [];
@@ -215,6 +231,11 @@
 	{#if isCalculating}
 		<div class="bg-opacity-75 absolute inset-0 flex items-center justify-center bg-white">
 			<div class="text-gray-500">Calculating balances...</div>
+		</div>
+	{/if}
+	{#if !chart && !isCalculating}
+		<div class="bg-opacity-75 absolute inset-0 flex items-center justify-center bg-white">
+			<div class="text-gray-500">No data available for the selected date range</div>
 		</div>
 	{/if}
 </div>
