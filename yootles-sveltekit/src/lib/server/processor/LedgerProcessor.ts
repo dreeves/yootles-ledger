@@ -261,6 +261,53 @@ export class LedgerProcessor {
 		let lineNumber = 0;
 
 		try {
+			// First pass: identify all accounts (both registered and unregistered)
+			for (const line of lines) {
+				const trimmed = line.trim();
+				if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('(*')) continue;
+
+				const transaction = this.parseTransaction(trimmed);
+				if (transaction) {
+					// Track unregistered accounts
+					if (!this.accounts.some(a => a.id === transaction.from)) {
+						const account = this.unregisteredAccounts.get(transaction.from) || { 
+							id: transaction.from, 
+							usedInTransactions: [] 
+						};
+						account.usedInTransactions.push({ 
+							date: transaction.date, 
+							description: transaction.description, 
+							role: 'from' 
+						});
+						this.unregisteredAccounts.set(transaction.from, account);
+					}
+					if (!this.accounts.some(a => a.id === transaction.to)) {
+						const account = this.unregisteredAccounts.get(transaction.to) || { 
+							id: transaction.to, 
+							usedInTransactions: [] 
+						};
+						account.usedInTransactions.push({ 
+							date: transaction.date, 
+							description: transaction.description, 
+							role: 'to' 
+						});
+						this.unregisteredAccounts.set(transaction.to, account);
+					}
+				}
+			}
+
+			// Add unregistered accounts to the main accounts list
+			for (const [id, ua] of this.unregisteredAccounts) {
+				if (!this.accounts.some(a => a.id === id)) {
+					this.accounts.push({
+						id: id,
+						name: `Unregistered Account ${id}`,
+						email: ''
+					});
+				}
+			}
+
+			// Second pass: process all transactions and rates
 			for (const line of lines) {
 				lineNumber++;
 				const trimmed = line.trim();
@@ -275,7 +322,13 @@ export class LedgerProcessor {
 
 				const account = this.parseAccount(trimmed);
 				if (account) {
-					this.accounts.push(account);
+					// Update the account name if it exists (might be an unregistered account)
+					const existingIndex = this.accounts.findIndex(a => a.id === account.id);
+					if (existingIndex >= 0) {
+						this.accounts[existingIndex] = account;
+					} else {
+						this.accounts.push(account);
+					}
 					continue;
 				}
 

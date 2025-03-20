@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Ledger, CombinedAccount } from '$lib/types/ledger';
+	import type { Ledger } from '$lib/types/ledger';
 	import { RotateCw } from 'lucide-svelte';
 	import { createEventDispatcher } from 'svelte';
 	import AccountCard from './AccountCard.svelte';
@@ -35,15 +35,6 @@
 		}
 	}
 
-	function formatCurrency(amount: number): string {
-		return new Intl.NumberFormat('en-US', {
-			style: 'currency',
-			currency: 'USD',
-			minimumFractionDigits: 2,
-			maximumFractionDigits: 2
-		}).format(amount);
-	}
-
 	function formatPercent(rate: number): string {
 		return new Intl.NumberFormat('en-US', {
 			style: 'percent',
@@ -52,157 +43,10 @@
 		}).format(rate);
 	}
 
-	function calculateInterestPercent(principal: number, interest: number): string {
-		if (principal === 0) return '';
-		return formatPercent(interest / principal);
-	}
-
 	const currentRate =
 		data.ledger.interestRates.length > 0
 			? data.ledger.interestRates[data.ledger.interestRates.length - 1].rate
 			: 0;
-
-	function dateDiffInYears(fromDate: string, toDate: string): number {
-		const [fromYear, fromMonth, fromDay] = fromDate.split('.').map(Number);
-		const [toYear, toMonth, toDay] = toDate.split('.').map(Number);
-
-		const from = new Date(fromYear, fromMonth - 1, fromDay);
-		const to = new Date(toYear, toMonth - 1, toDay);
-
-		return (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-	}
-
-	let allAccounts: CombinedAccount[] = [
-		...data.ledger.accounts,
-		...(data.ledger.unregisteredAccounts?.map((ua) => {
-			// Sort all events (transactions and interest rate changes) by date
-			const allEvents = [
-				...data.ledger.transactions
-					.filter((tx) => tx.from === ua.id || tx.to === ua.id)
-					.map((tx) => ({ type: 'transaction' as const, date: tx.date, data: tx })),
-				...data.ledger.interestRates.map((r) => ({ type: 'rate' as const, date: r.date, data: r }))
-			].sort((a, b) => a.date.localeCompare(b.date));
-
-			let balance = 0;
-			let interestAccrued = 0;
-			let currentRate = 0;
-			let lastDate = '';
-
-			// Process all events chronologically
-			for (const event of allEvents) {
-				// Calculate interest since last event if there's a rate
-				if (lastDate && currentRate > 0) {
-					const years = dateDiffInYears(lastDate, event.date);
-					const interest = balance * currentRate * years;
-					balance = balance * (1 + currentRate * years);
-					interestAccrued += interest;
-				}
-
-				if (event.type === 'rate') {
-					currentRate = event.data.rate;
-				} else {
-					const tx = event.data;
-					if (tx.from === ua.id) {
-						balance -= tx.amount;
-					} else {
-						balance += tx.amount;
-					}
-				}
-
-				lastDate = event.date;
-			}
-
-			// Calculate final interest up to today if there's a current rate
-			if (currentRate > 0 && lastDate) {
-				const today = new Date().toISOString().split('T')[0].replace(/-/g, '.');
-				const years = dateDiffInYears(lastDate, today);
-				const interest = balance * currentRate * years;
-				balance = balance * (1 + currentRate * years);
-				interestAccrued += interest;
-			}
-
-			// Round to 2 decimal places
-			balance = Math.round(balance * 100) / 100;
-			interestAccrued = Math.round(interestAccrued * 100) / 100;
-
-			return {
-				id: ua.id,
-				name: ua.id,
-				email: '',
-				balance,
-				interestAccrued,
-				isUnregistered: true,
-				transactionCount: ua.usedInTransactions.length
-			};
-		}) ?? [])
-	];
-
-	$: {
-		allAccounts = [
-			...data.ledger.accounts,
-			...(data.ledger.unregisteredAccounts?.map((ua) => {
-				// Sort all events (transactions and interest rate changes) by date
-				const allEvents = [
-					...data.ledger.transactions
-						.filter((tx) => tx.from === ua.id || tx.to === ua.id)
-						.map((tx) => ({ type: 'transaction' as const, date: tx.date, data: tx })),
-					...data.ledger.interestRates.map((r) => ({ type: 'rate' as const, date: r.date, data: r }))
-				].sort((a, b) => a.date.localeCompare(b.date));
-
-				let balance = 0;
-				let interestAccrued = 0;
-				let currentRate = 0;
-				let lastDate = '';
-
-				// Process all events chronologically
-				for (const event of allEvents) {
-					// Calculate interest since last event if there's a rate
-					if (lastDate && currentRate > 0) {
-						const years = dateDiffInYears(lastDate, event.date);
-						const interest = balance * currentRate * years;
-						balance = balance * (1 + currentRate * years);
-						interestAccrued += interest;
-					}
-
-					if (event.type === 'rate') {
-						currentRate = event.data.rate;
-					} else {
-						const tx = event.data;
-						if (tx.from === ua.id) {
-							balance -= tx.amount;
-						} else {
-							balance += tx.amount;
-						}
-					}
-
-					lastDate = event.date;
-				}
-
-				// Calculate final interest up to today if there's a current rate
-				if (currentRate > 0 && lastDate) {
-					const today = new Date().toISOString().split('T')[0].replace(/-/g, '.');
-					const years = dateDiffInYears(lastDate, today);
-					const interest = balance * currentRate * years;
-					balance = balance * (1 + currentRate * years);
-					interestAccrued += interest;
-				}
-
-				// Round to 2 decimal places
-				balance = Math.round(balance * 100) / 100;
-				interestAccrued = Math.round(interestAccrued * 100) / 100;
-
-				return {
-					id: ua.id,
-					name: ua.id,
-					email: '',
-					balance,
-					interestAccrued,
-					isUnregistered: true,
-					transactionCount: ua.usedInTransactions.length
-				};
-			}) ?? [])
-		];
-	}
 </script>
 
 <div class="balance-display h-full overflow-auto rounded-lg bg-custom-primary p-3 shadow-sm">
@@ -236,7 +80,7 @@
 	{/if}
 
 	<div class="grid auto-rows-fr grid-cols-1 gap-2 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
-		{#each allAccounts as account (account.id)}
+		{#each data.ledger.accounts as account (account.id)}
 			<AccountCard {account} />
 		{/each}
 	</div>
