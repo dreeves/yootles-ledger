@@ -3,7 +3,7 @@
   import Chart from 'chart.js/auto';
   import type { Ledger } from '$lib/types/ledger';
   import DateRangeFilter from '$lib/components/DateRangeFilter.svelte';
-  import { formatCurrency, formatPercent, formatDate, parseDateFromInput } from '$lib/utils/formatting';
+  import { formatCurrency, formatPercent, formatDate, parseDateFromInput, formatDateForInput } from '$lib/utils/formatting';
   
   export let data: { ledger: Ledger };
   let selectedAccount = '';
