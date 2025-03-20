@@ -25,6 +25,17 @@ export interface UnregisteredAccount {
 	}>;
 }
 
+export type CombinedAccount =
+	| Account
+	| (UnregisteredAccount & {
+			name: string;
+			email: string;
+			balance: number;
+			interestAccrued: number;
+			isUnregistered: true;
+			transactionCount: number;
+	  });
+
 export interface Ledger {
 	id?: string;
 	accounts: Account[];
