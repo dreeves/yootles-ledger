@@ -33,3 +33,8 @@
 - Automatic refresh on detected changes
 - Uses long-polling for efficiency
 - Shows loading spinner during updates
+
+## Development
+- View server logs with `pnpm logs`
+- Logs include errors and debug information
+- Useful for troubleshooting API and rendering issues

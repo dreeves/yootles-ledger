@@ -70,6 +70,12 @@
     </div>
     <div class="space-x-2">
       <a 
+        href="/{data.ledger.id}/history" 
+        class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+      >
+        View History
+      </a>
+      <a 
         href="/{data.ledger.id}/transactions" 
         class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
       >
