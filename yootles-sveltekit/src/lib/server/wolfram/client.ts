@@ -16,7 +16,7 @@ export class WolframClient {
 
       console.error('Sending request:', {
         url: this.config.baseUrl,
-        data: formData.toString()
+        data: String(data).substring(0, 100) + '...'
       });
 
       const response = await fetch(this.config.baseUrl, {
@@ -33,16 +33,35 @@ export class WolframClient {
         console.error('Wolfram API error:', {
           status: response.status,
           statusText: response.statusText,
-          body: errorText
+          body: errorText,
+          url: this.config.baseUrl
         });
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
-      console.error('Wolfram API response:', JSON.stringify(result, null, 2));
+      
+      console.error('Wolfram API raw response:', {
+        status: result.status,
+        timestamp: result.timestamp,
+        data: result.data ? {
+          accountCount: result.data.accounts?.length,
+          transactionCount: result.data.transactions?.length,
+          interestRateCount: result.data.interestRates?.length,
+          interestRates: result.data.interestRates,
+          firstTransaction: result.data.transactions?.[0],
+          firstAccount: result.data.accounts?.[0]
+        } : null,
+        error: result.error
+      });
+
       return result;
     } catch (error) {
-      console.error('Wolfram client error:', error);
+      console.error('Wolfram client error:', {
+        error: error.message,
+        stack: error.stack,
+        config: this.config
+      });
       return {
         status: 'error',
         error: error.message,
@@ -55,6 +74,13 @@ export class WolframClient {
     if (!ledger) {
       throw new Error('Ledger content is required');
     }
+    console.error('Calculating balances for ledger:', {
+      contentLength: ledger.length,
+      preview: ledger.substring(0, 100) + '...',
+      interestRates: ledger.match(/irate\[.*?\].*?;/g) || [],
+      rawInterestRates: ledger.match(/irate\[.*?\]/g) || [],
+      interestRateLines: ledger.split('\n').filter(line => line.includes('irate')),
+    });
     return this.request<BalanceResult>(ledger);
   }
 
