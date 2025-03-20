@@ -5,50 +5,52 @@ import { LedgerProcessor } from './processor/LedgerProcessor';
 
 export async function loadLedger(name: string): Promise<Ledger> {
   try {
-    if (name === 'socket.io') {
-      throw new Error('Invalid ledger name');
+    // Validate ledger name
+    if (!name || name === 'socket.io' || !/^[a-zA-Z0-9-_]+$/.test(name)) {
+      throw new Error('INVALID_NAME');
     }
 
     // Read the raw ledger file
     const filePath = join(process.cwd(), '..', 'data', `${name}-snapshot.txt`);
-    console.error('Attempting to read file:', filePath);
     
     try {
       const content = await readFile(filePath, 'utf-8');
-      if (!content) {
-        throw new Error('Ledger file is empty');
+      
+      if (!content || !content.trim()) {
+        throw new Error('EMPTY_FILE');
       }
-
-      if (!content.trim()) {
-        throw new Error('Ledger file is empty');
-      }
-
-      // Log the entire content for debugging
-      console.error('=== START LEDGER CONTENT ===');
-      console.error(content);
-      console.error('=== END LEDGER CONTENT ===');
 
       // Process the ledger using our local processor
       const processor = new LedgerProcessor();
       const result = processor.processLedger(content);
+
+      if (!result.accounts.length) {
+        throw new Error('NO_ACCOUNTS');
+      }
 
       return {
         ...result,
         id: name
       };
     } catch (fileError) {
+      if (fileError.code === 'ENOENT') {
+        throw new Error('NOT_FOUND');
+      }
+      if (fileError.message === 'EMPTY_FILE') {
+        throw new Error('EMPTY_FILE');
+      }
+      if (fileError.message === 'NO_ACCOUNTS') {
+        throw new Error('NO_ACCOUNTS');
+      }
       console.error('File read error:', {
         error: fileError,
         cwd: process.cwd(),
         filePath
       });
-      throw fileError;
+      throw new Error('READ_ERROR');
     }
   } catch (error) {
-    if (error.message === 'Invalid ledger name') {
-      throw error;
-    }
     console.error('Error loading ledger:', error);
-    throw new Error(`Failed to load ledger "${name}": ${error.message}`);
+    throw error;
   }
 }

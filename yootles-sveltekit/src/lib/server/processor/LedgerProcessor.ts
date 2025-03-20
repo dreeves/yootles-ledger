@@ -40,8 +40,19 @@ export class LedgerProcessor {
 
   private expandMonthlyTransaction(startDate: string, endDate: string, amount: number, from: string, to: string, description: string): Transaction[] {
     const [startYear, startMonth, startDay] = startDate.split('.').map(Number);
-    let [endYear, endMonth, endDay] = endDate === 'INDEFINITE' 
-      ? new Date().toISOString().split('T')[0].split('-').map(Number)
+    
+    // For INDEFINITE transactions, generate only up to current month plus one
+    // This ensures we always have at least one future transaction while keeping processing efficient
+    let [endYear, endMonth, endDay] = endDate === 'INDEFINITE'
+      ? (() => {
+          const now = new Date();
+          now.setMonth(now.getMonth() + 1); // Add one month
+          return [
+            now.getFullYear(),
+            now.getMonth() + 1,
+            startDay // Keep the same day of month as start date
+          ];
+        })()
       : endDate.split('.').map(Number);
     
     const start = new Date(startYear, startMonth - 1, startDay);

@@ -9,9 +9,20 @@ export const load: PageServerLoad = async ({ params }) => {
       ledger
     };
   } catch (e) {
-    if (e.message === 'Invalid ledger name') {
-      throw error(404, 'Ledger not found');
+    const message = e.message;
+    switch (message) {
+      case 'INVALID_NAME':
+        throw error(400, 'Invalid ledger name. Use only letters, numbers, hyphens, and underscores.');
+      case 'NOT_FOUND':
+        throw error(404, 'Ledger not found');
+      case 'EMPTY_FILE':
+        throw error(400, 'Ledger file is empty');
+      case 'NO_ACCOUNTS':
+        throw error(400, 'Ledger has no accounts defined');
+      case 'READ_ERROR':
+        throw error(500, 'Failed to read ledger file');
+      default:
+        throw error(500, 'Failed to load ledger');
     }
-    throw error(500, 'Failed to load ledger');
   }
 };

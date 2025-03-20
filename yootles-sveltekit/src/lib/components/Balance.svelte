@@ -10,7 +10,6 @@
     try {
       isRefreshing = true;
       lastError = null;
-      console.log('Refreshing balances for ledger:', data.ledger.id);
       
       const response = await fetch(`/api/ledger/${data.ledger.id}/refresh`, {
         method: 'POST'
@@ -18,15 +17,10 @@
       
       if (!response.ok) {
         const errorData = await response.text();
-        console.error('Refresh failed:', errorData);
         lastError = `Failed to refresh: ${errorData}`;
         throw new Error('Failed to refresh balances');
       }
 
-      const responseData = await response.json();
-      console.log('Refresh response:', responseData);
-
-      // Reload the page data using SvelteKit's invalidation
       await invalidate(`/api/ledger/${data.ledger.id}`);
     } catch (error) {
       console.error('Error refreshing balances:', error);
@@ -86,20 +80,23 @@
   <div class="space-y-2">
     {#each data.ledger.accounts as account}
       <div class="flex justify-between items-center p-2 hover:bg-gray-50">
-        <span class="font-medium">{account.name}</span>
-        <span class={account.balance >= 0 ? 'text-green-600' : 'text-red-600'}>
-          {formatCurrency(account.balance)}
-        </span>
+        <div class="flex flex-col">
+          <span class="font-medium">{account.name}</span>
+          {#if account.email}
+            <span class="text-sm text-gray-500">{account.email}</span>
+          {/if}
+        </div>
+        <div class="flex flex-col items-end">
+          <span class={account.balance >= 0 ? 'text-green-600' : 'text-red-600'}>
+            {formatCurrency(account.balance)}
+          </span>
+          {#if data.ledger.interestRates.length > 0}
+            <span class="text-sm text-gray-500">
+              {formatPercent(data.ledger.interestRates[data.ledger.interestRates.length - 1].rate)} interest
+            </span>
+          {/if}
+        </div>
       </div>
     {/each}
-  </div>
-
-  <div class="mt-4 text-sm text-gray-500">
-    <p>Debug Info:</p>
-    <pre class="mt-1 p-2 bg-gray-50 rounded overflow-auto">
-      Accounts: {JSON.stringify(data.ledger.accounts, null, 2)}
-      Interest Rates: {JSON.stringify(data.ledger.interestRates, null, 2)}
-      Raw Data: {JSON.stringify(data, null, 2)}
-    </pre>
   </div>
 </div>
