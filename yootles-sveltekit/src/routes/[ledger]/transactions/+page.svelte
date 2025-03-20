@@ -31,6 +31,14 @@
     return `${year}.${month}.${day}`;
   }
 
+  function formatPercent(rate: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'percent',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(rate);
+  }
+
   $: filteredTransactions = data.ledger.transactions.filter(tx => {
     if (selectedAccount && tx.from !== selectedAccount && tx.to !== selectedAccount) {
       return false;
@@ -49,6 +57,12 @@
       ? b.date.localeCompare(a.date)
       : a.date.localeCompare(b.date)
   );
+
+  $: sortedInterestRates = [...data.ledger.interestRates].sort((a, b) => 
+    b.date.localeCompare(a.date)
+  );
+
+  $: currentRate = sortedInterestRates[0]?.rate ?? 0;
 
   $: statistics = {
     totalAmount: filteredTransactions.reduce((sum, tx) => sum + tx.amount, 0),
@@ -143,7 +157,7 @@
     </div>
   </div>
 
-  <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div class="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
     <div class="bg-white p-4 rounded-lg shadow">
       <h3 class="text-sm font-medium text-gray-500">Total Transactions</h3>
       <p class="mt-1 text-2xl font-semibold text-gray-900">{statistics.count}</p>
@@ -156,7 +170,47 @@
       <h3 class="text-sm font-medium text-gray-500">Average Amount</h3>
       <p class="mt-1 text-2xl font-semibold text-gray-900">{formatCurrency(statistics.averageAmount)}</p>
     </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+      <h3 class="text-sm font-medium text-gray-500">Current Interest Rate</h3>
+      <p class="mt-1 text-2xl font-semibold text-gray-900">{formatPercent(currentRate)}</p>
+    </div>
   </div>
+
+  {#if data.ledger.interestRates.length > 0}
+    <div class="mb-6 bg-white shadow rounded-lg overflow-hidden">
+      <div class="px-4 py-5 sm:px-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">Interest Rate History</h3>
+      </div>
+      <div class="border-t border-gray-200">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Rate
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              {#each sortedInterestRates as rate}
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(rate.date)}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {formatPercent(rate.rate)}
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {/if}
 
   <div class="bg-white shadow rounded-lg overflow-hidden">
     <div class="overflow-x-auto">
