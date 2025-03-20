@@ -1,10 +1,6 @@
 <script lang="ts">
 	import type { Ledger } from '$lib/types/ledger';
-	import { invalidate } from '$app/navigation';
 	import { RotateCw } from 'lucide-svelte';
-	import { createEventDispatcher } from 'svelte';
-
-	const dispatch = createEventDispatcher();
 
 	export let data: { ledger: Ledger };
 	let isRefreshing = false;
