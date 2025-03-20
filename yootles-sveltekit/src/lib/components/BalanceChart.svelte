@@ -2,12 +2,7 @@
 	import { onDestroy } from 'svelte';
 	import Chart from 'chart.js/auto';
 	import type { Ledger } from '$lib/types/ledger';
-	import {
-		formatCurrency,
-		formatPercent,
-		formatDate,
-		parseDateFromInput
-	} from '$lib/utils/formatting';
+	import { formatCurrency, formatPercent, formatDate, parseDateFromInput } from '$lib/utils/formatting';
 
 	export let ledger: Ledger;
 	export let selectedAccount: string;
@@ -20,12 +15,6 @@
 	let isCalculating = false;
 
 	function isDateInRange(date: string): boolean {
-		if (!startDate && !endDate) return true;
-		if (endDate && date > parseDateFromInput(endDate)) return false;
-		return true;
-	}
-
-	function isDateInDisplayRange(date: string): boolean {
 		if (!startDate && !endDate) return true;
 		if (startDate && date < parseDateFromInput(startDate)) return false;
 		if (endDate && date > parseDateFromInput(endDate)) return false;
@@ -109,7 +98,7 @@
 
 					lastDate = event.date;
 
-					if (selectedAccount && isDateInDisplayRange(event.date)) {
+					if (selectedAccount) {
 						const principal =
 							balances.get(selectedAccount)! - interestAccrued.get(selectedAccount)!;
 						const interest = interestAccrued.get(selectedAccount)!;
