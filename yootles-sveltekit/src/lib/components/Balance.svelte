@@ -68,19 +68,7 @@
         </p>
       {/if}
     </div>
-    <div class="flex gap-2">
-      <a 
-        href="/{data.ledger.id}/history" 
-        class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-      >
-        View History
-      </a>
-      <a 
-        href="/{data.ledger.id}/transactions" 
-        class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-      >
-        View Transactions
-      </a>
+    <div>
       <button 
         class="px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
         on:click={refreshBalances}
