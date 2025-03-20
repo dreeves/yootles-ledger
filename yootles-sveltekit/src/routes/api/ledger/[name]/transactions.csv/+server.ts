@@ -3,55 +3,55 @@ import type { RequestHandler } from './$types';
 import { loadLedger } from '$lib/server/ledger';
 
 function formatDate(date: string): string {
-  return date;
+	return date;
 }
 
 function escapeCSV(str: string): string {
-  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-    return `"${str.replace(/"/g, '""')}"`;
-  }
-  return str;
+	if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+		return `"${str.replace(/"/g, '""')}"`;
+	}
+	return str;
 }
 
 export const GET: RequestHandler = async ({ params }) => {
-  try {
-    const ledger = await loadLedger(params.name);
+	try {
+		const ledger = await loadLedger(params.name);
 
-    // Sort transactions by date descending
-    ledger.transactions.sort((a, b) => b.date.localeCompare(a.date));
+		// Sort transactions by date descending
+		ledger.transactions.sort((a, b) => b.date.localeCompare(a.date));
 
-    // Create CSV header
-    const headers = ['Date', 'From', 'To', 'Amount', 'Description'];
-    
-    // Format transactions
-    const rows = ledger.transactions.map(tx => {
-      const fromName = ledger.accounts.find(a => a.id === tx.from)?.name || tx.from;
-      const toName = ledger.accounts.find(a => a.id === tx.to)?.name || tx.to;
-      
-      return [
-        formatDate(tx.date),
-        escapeCSV(fromName),
-        escapeCSV(toName),
-        tx.amount.toFixed(2),
-        escapeCSV(tx.description)
-      ].join(',');
-    });
+		// Create CSV header
+		const headers = ['Date', 'From', 'To', 'Amount', 'Description'];
 
-    // Combine header and rows
-    const csv = [headers.join(','), ...rows].join('\n');
+		// Format transactions
+		const rows = ledger.transactions.map((tx) => {
+			const fromName = ledger.accounts.find((a) => a.id === tx.from)?.name || tx.from;
+			const toName = ledger.accounts.find((a) => a.id === tx.to)?.name || tx.to;
 
-    // Return CSV file
-    return new Response(csv, {
-      headers: {
-        'Content-Type': 'text/csv',
-        'Content-Disposition': `attachment; filename="${params.name}-transactions.csv"`
-      }
-    });
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : String(e);
-    if (message === 'Invalid ledger name') {
-      throw error(404, 'Ledger not found');
-    }
-    throw error(500, 'Failed to generate CSV');
-  }
+			return [
+				formatDate(tx.date),
+				escapeCSV(fromName),
+				escapeCSV(toName),
+				tx.amount.toFixed(2),
+				escapeCSV(tx.description)
+			].join(',');
+		});
+
+		// Combine header and rows
+		const csv = [headers.join(','), ...rows].join('\n');
+
+		// Return CSV file
+		return new Response(csv, {
+			headers: {
+				'Content-Type': 'text/csv',
+				'Content-Disposition': `attachment; filename="${params.name}-transactions.csv"`
+			}
+		});
+	} catch (e: unknown) {
+		const message = e instanceof Error ? e.message : String(e);
+		if (message === 'Invalid ledger name') {
+			throw error(404, 'Ledger not found');
+		}
+		throw error(500, 'Failed to generate CSV');
+	}
 };
