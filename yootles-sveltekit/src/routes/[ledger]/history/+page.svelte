@@ -365,7 +365,13 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              {#each filteredTransactions as tx}
+              {#each filteredTransactions as tx, i}
+                {@const previousTransactions = filteredTransactions.slice(0, i + 1)}
+                {@const runningBalance = previousTransactions.reduce((sum, t) => {
+                  if (t.from === selectedAccount) return sum - t.amount;
+                  if (t.to === selectedAccount) return sum + t.amount;
+                  return sum;
+                }, 0)}
                 <tr>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(tx.date)}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -375,7 +381,7 @@
                     {formatCurrency(tx.amount)}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatCurrency(tx.from === selectedAccount ? -tx.amount : tx.amount)}
+                    {formatCurrency(runningBalance)}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {currentRate > 0 ? formatPercent(currentRate) : '-'}
