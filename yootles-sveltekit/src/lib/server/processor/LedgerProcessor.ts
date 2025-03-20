@@ -28,6 +28,7 @@ export class LedgerProcessor {
   }
 
   private evaluateExpression(expr: string): number {
+    // Handle common patterns like "25/60*20" or "3.01*35"
     expr = expr.replace(/(\d+)\/(\d+)/g, '($1/$2)');
     try {
       return new Function(`return ${expr}`)();
@@ -39,7 +40,7 @@ export class LedgerProcessor {
 
   private expandMonthlyTransaction(startDate: string, endDate: string, amount: number, from: string, to: string, description: string): Transaction[] {
     const [startYear, startMonth, startDay] = startDate.split('.').map(Number);
-    const [endYear, endMonth, endDay] = endDate === 'INDEFINITE' 
+    let [endYear, endMonth, endDay] = endDate === 'INDEFINITE' 
       ? new Date().toISOString().split('T')[0].split('-').map(Number)
       : endDate.split('.').map(Number);
     

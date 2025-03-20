@@ -1,12 +1,14 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { loadLedger } from '$lib/server/ledger';
-import { WolframClient } from '$lib/server/wolfram/client';
-import { getWolframConfig } from '$lib/server/wolfram/config';
 
 export const load: PageServerLoad = async ({ params }) => {
   try {
     const ledger = await loadLedger(params.ledger);
+    
+    // Sort transactions by date descending by default
+    ledger.transactions.sort((a, b) => b.date.localeCompare(a.date));
+    
     return {
       ledger
     };
@@ -14,6 +16,7 @@ export const load: PageServerLoad = async ({ params }) => {
     if (e.message === 'Invalid ledger name') {
       throw error(404, 'Ledger not found');
     }
+    console.error('Error loading ledger:', e);
     throw error(500, 'Failed to load ledger');
   }
 };

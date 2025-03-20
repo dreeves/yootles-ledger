@@ -18,6 +18,9 @@ export const GET: RequestHandler = async ({ params }) => {
   try {
     const ledger = await loadLedger(params.name);
 
+    // Sort transactions by date descending
+    ledger.transactions.sort((a, b) => b.date.localeCompare(a.date));
+
     // Create CSV header
     const headers = ['Date', 'From', 'To', 'Amount', 'Description'];
     
