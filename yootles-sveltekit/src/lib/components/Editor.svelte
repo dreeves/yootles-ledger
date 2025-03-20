@@ -5,11 +5,18 @@
   export let data: { ledger: Ledger };
   export let socket: any;
 
+  let lastUpdate = 0;
+  const DEBOUNCE_MS = 1000; // Only allow updates once per second
+
   onMount(() => {
     // Listen for changes and notify other users
     window.addEventListener('message', (event) => {
       if (event.origin === 'https://padm.us' && event.data.type === 'pad-changed') {
-        socket.emit('ledger-update', { ledgerId: data.ledger.id });
+        const now = Date.now();
+        if (now - lastUpdate > DEBOUNCE_MS) {
+          lastUpdate = now;
+          socket.emit('ledger-update', { ledgerId: data.ledger.id });
+        }
       }
     });
   });

@@ -1,4 +1,5 @@
 import { io, type Socket } from 'socket.io-client';
+import { invalidate } from '$app/navigation';
 
 export function initSocket(ledgerId: string): Socket {
   const socket = io({
@@ -10,8 +11,8 @@ export function initSocket(ledgerId: string): Socket {
   });
 
   socket.on('refresh', () => {
-    // Trigger page refresh when ledger is updated
-    window.location.reload();
+    // Use SvelteKit's invalidate instead of full page reload
+    invalidate(`/api/ledger/${ledgerId}`);
   });
 
   return socket;
