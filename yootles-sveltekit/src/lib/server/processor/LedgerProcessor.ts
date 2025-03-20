@@ -31,16 +31,15 @@ export class LedgerProcessor {
     const match = line.match(/iou\[\s*([\d.]+)\s*,\s*(.*?)\s*,\s*(.*?)\s*,\s*([\d.]+)\s*,\s*"(.*?)"\s*\]/);
     if (!match) return null;
     return {
-      date: match[4],
       amount: parseFloat(match[1]),
       from: match[2].trim(),
       to: match[3].trim(),
+      date: match[4],
       description: match[5]
     };
   }
 
   parseInterestRate(line: string): InterestRate | null {
-    // Try equals format: irate[date] = .05;
     let match = line.match(/irate\[\s*([\d.]+)\s*\]\s*=\s*\.?(\d+)\s*;/);
     if (match) {
       return {
@@ -49,7 +48,6 @@ export class LedgerProcessor {
       };
     }
 
-    // Try comma format: irate[date, 0.05]
     match = line.match(/irate\[\s*([\d.]+)\s*,\s*([\d.]+)\s*\]/);
     if (match) {
       return {
@@ -76,20 +74,16 @@ export class LedgerProcessor {
     let currentRate = 0;
     let lastDate = '';
 
-    // Initialize balances
     this.accounts.forEach(account => {
       balances.set(account.id, 0);
     });
 
-    // Sort all events chronologically
     const allEvents = [
       ...this.transactions.map(t => ({ type: 'transaction' as const, date: t.date, data: t })),
       ...this.interestRates.map(r => ({ type: 'rate' as const, date: r.date, data: r }))
     ].sort((a, b) => a.date.localeCompare(b.date));
 
-    // Process events
     for (const event of allEvents) {
-      // Apply interest since last event
       if (lastDate && currentRate > 0) {
         const years = this.dateDiffInYears(lastDate, event.date);
         for (const [id, balance] of balances.entries()) {
@@ -108,7 +102,6 @@ export class LedgerProcessor {
       lastDate = event.date;
     }
 
-    // Return final balances
     return this.accounts.map(account => ({
       id: account.id,
       name: account.name,
@@ -156,7 +149,6 @@ export class LedgerProcessor {
 
     const balances = this.calculateBalances();
 
-    // Merge balances with accounts
     const accountsWithBalances = this.accounts.map(account => {
       const balance = balances.find(b => b.id === account.id);
       return {
