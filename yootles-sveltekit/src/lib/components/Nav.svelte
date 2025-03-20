@@ -6,7 +6,7 @@
 </script>
 
 <nav class="bg-gray-100 shadow-sm">
-	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-12">
 		<div class="flex h-16 justify-between">
 			<div class="flex">
 				<div class="flex flex-shrink-0 items-center">

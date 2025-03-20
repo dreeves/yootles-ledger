@@ -15,7 +15,8 @@ export default defineConfig({
 				target: 'ws://localhost:3000',
 				ws: true
 			}
-		}
+		},
+		allowedHosts: ['yootles.local', '.ngrok-free.app']
 	},
 
 	test: {
