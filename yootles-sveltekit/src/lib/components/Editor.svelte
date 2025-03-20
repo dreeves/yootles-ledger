@@ -24,8 +24,8 @@
 </script>
 
 <div class="editor-container h-full overflow-hidden rounded-lg bg-gray-100 shadow">
-  <div class="border-b p-4">
-    <h2 class="text-xl font-semibold">Ledger Editor</h2>
+  <div class="border-b border-gray-300 p-4">
+    <h2 class="text-xl font-semibold text-gray-700">Ledger Editor</h2>
   </div>
 
   <iframe
