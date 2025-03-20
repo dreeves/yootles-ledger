@@ -10,6 +10,7 @@
   let startDate: string = '';
   let endDate: string = '';
   let showPercentages = false;
+  let isCalculating = false;
 
   function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-US', {
@@ -64,42 +65,33 @@
   $: currentRate = sortedInterestRates[0]?.rate ?? 0;
 
   $: if (chartCanvas && selectedAccount) {
+    isCalculating = true;
     console.log('Updating chart for account:', selectedAccount);
-    console.log('Canvas element:', chartCanvas);
     
     const ctx = chartCanvas.getContext('2d');
     if (ctx) {
       try {
-        console.log('Got 2D context:', ctx);
-
-        // Destroy existing chart only if we're about to create a new one
         if (chart) {
           console.log('Destroying existing chart before creating new one');
           chart.destroy();
           chart = null;
         }
         
-        // Calculate running balances
         const balances = new Map<string, number>();
         const interestAccrued = new Map<string, number>();
         let currentRate = 0;
         let lastDate = '';
 
-        // Initialize balances for all accounts
         data.ledger.accounts.forEach(account => {
           balances.set(account.id, 0);
           interestAccrued.set(account.id, 0);
         });
 
-        // Combine transactions and interest rate changes
         const allEvents = [
           ...data.ledger.transactions.map(t => ({ type: 'transaction' as const, date: t.date, data: t })),
           ...data.ledger.interestRates.map(r => ({ type: 'rate' as const, date: r.date, data: r }))
         ].sort((a, b) => a.date.localeCompare(b.date));
 
-        console.log('All events:', allEvents);
-
-        // Calculate balances at each point
         const timePoints = [];
         const principalPoints = [];
         const interestPoints = [];
@@ -107,7 +99,6 @@
         const ratePoints = [];
 
         for (const event of allEvents) {
-          // Apply interest since last event
           if (lastDate && currentRate > 0) {
             const [fromYear, fromMonth, fromDay] = lastDate.split('.').map(Number);
             const [toYear, toMonth, toDay] = event.date.split('.').map(Number);
@@ -125,16 +116,13 @@
 
           if (event.type === 'rate') {
             currentRate = event.data.rate;
-            console.log('Interest rate change:', { date: event.date, rate: currentRate });
           } else {
             const tx = event.data;
             if (tx.from === selectedAccount) {
               balances.set(tx.from, balances.get(tx.from)! - tx.amount);
-              console.log('Debit:', { date: tx.date, amount: tx.amount, balance: balances.get(tx.from) });
             }
             if (tx.to === selectedAccount) {
               balances.set(tx.to, balances.get(tx.to)! + tx.amount);
-              console.log('Credit:', { date: tx.date, amount: tx.amount, balance: balances.get(tx.to) });
             }
           }
 
@@ -150,24 +138,8 @@
             interestPoints.push(interest);
             totalPoints.push(total);
             ratePoints.push(currentRate);
-
-            console.log('Point:', { 
-              date: event.date, 
-              principal, 
-              interest, 
-              total, 
-              rate: currentRate 
-            });
           }
         }
-
-        console.log('Creating chart with data:', {
-          timePoints,
-          principalPoints,
-          interestPoints,
-          totalPoints,
-          ratePoints
-        });
 
         if (timePoints.length > 0) {
           try {
@@ -254,7 +226,6 @@
                 }
               }
             });
-            console.log('Chart created successfully:', chart);
           } catch (error) {
             console.error('Error creating chart:', error);
             chart = null;
@@ -267,11 +238,16 @@
         console.error('Error in chart initialization:', error);
         chart = null;
       }
-    } else {
-      console.error('Failed to get 2D context from canvas');
+    }
+    isCalculating = false;
+  }
+
+  onDestroy(() => {
+    if (chart) {
+      chart.destroy();
       chart = null;
     }
-  }
+  });
 
   // Initialize date range if there are transactions
   $: if (data.ledger.transactions.length > 0 && !startDate && !endDate) {
@@ -279,14 +255,6 @@
     startDate = formatDateForInput(dates.reduce((a, b) => a < b ? a : b));
     endDate = formatDateForInput(dates.reduce((a, b) => a > b ? a : b));
   }
-
-  onDestroy(() => {
-    if (chart) {
-      console.log('Cleaning up chart on component destruction');
-      chart.destroy();
-      chart = null;
-    }
-  });
 </script>
 
 <div class="p-4">
@@ -357,6 +325,11 @@
     <div class="bg-white rounded-lg shadow p-4">
       <div style="height: 400px; position: relative; width: 100%;">
         <canvas bind:this={chartCanvas} style="width: 100%; height: 100%;"></canvas>
+        {#if isCalculating}
+          <div class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+            <div class="text-gray-500">Calculating balances...</div>
+          </div>
+        {/if}
       </div>
 
       {#if filteredTransactions.length === 0}
