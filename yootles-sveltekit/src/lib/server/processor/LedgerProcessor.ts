@@ -187,6 +187,17 @@ export class LedgerProcessor {
       lastDate = event.date;
     }
 
+    // Calculate final interest up to today if there's a current rate
+    if (currentRate > 0 && lastDate) {
+      const today = new Date().toISOString().split('T')[0].replace(/-/g, '.');
+      const years = this.dateDiffInYears(lastDate, today);
+      for (const [id, balance] of balances.entries()) {
+        const interest = balance * currentRate * years;
+        balances.set(id, balance * (1 + currentRate * years));
+        interestAccrued.set(id, interestAccrued.get(id)! + interest);
+      }
+    }
+
     return this.accounts.map(account => ({
       id: account.id,
       name: account.name,

@@ -34,7 +34,9 @@
   function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount);
   }
 
@@ -45,11 +47,27 @@
       maximumFractionDigits: 2
     }).format(rate);
   }
+
+  function calculateInterestPercent(principal: number, interest: number): string {
+    if (principal === 0) return '';
+    return formatPercent(interest / principal);
+  }
+
+  const currentRate = data.ledger.interestRates.length > 0 
+    ? data.ledger.interestRates[data.ledger.interestRates.length - 1].rate 
+    : 0;
 </script>
 
 <div class="balance-display p-4 bg-white shadow rounded-lg">
   <div class="flex justify-between items-center mb-4">
-    <h2 class="text-xl font-semibold">Current Balances</h2>
+    <div>
+      <h2 class="text-xl font-semibold">Current Balances</h2>
+      {#if currentRate > 0}
+        <p class="text-sm text-gray-500">
+          Current interest rate: {formatPercent(currentRate)}
+        </p>
+      {/if}
+    </div>
     <div class="space-x-2">
       <a 
         href="/{data.ledger.id}/transactions" 
@@ -79,7 +97,8 @@
 
   <div class="space-y-2">
     {#each data.ledger.accounts as account}
-      <div class="flex justify-between items-center p-2 hover:bg-gray-50">
+      {@const principal = account.balance - account.interestAccrued}
+      <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded border">
         <div class="flex flex-col">
           <span class="font-medium">{account.name}</span>
           {#if account.email}
@@ -87,19 +106,31 @@
           {/if}
         </div>
         <div class="flex flex-col items-end">
-          <span class={account.balance >= 0 ? 'text-green-600' : 'text-red-600'}>
-            {formatCurrency(account.balance)}
-          </span>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-500">Principal:</span>
+            <span class={principal >= 0 ? 'text-green-600' : 'text-red-600'}>
+              {formatCurrency(principal)}
+            </span>
+          </div>
           {#if account.interestAccrued !== 0}
-            <span class="text-sm text-gray-500">
-              Interest: {formatCurrency(account.interestAccrued)}
-            </span>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-500">Interest:</span>
+              <span class={account.interestAccrued >= 0 ? 'text-green-600' : 'text-red-600'}>
+                {formatCurrency(account.interestAccrued)}
+                {#if principal !== 0}
+                  <span class="text-xs text-gray-500 ml-1">
+                    ({calculateInterestPercent(principal, account.interestAccrued)})
+                  </span>
+                {/if}
+              </span>
+            </div>
           {/if}
-          {#if data.ledger.interestRates.length > 0}
-            <span class="text-sm text-gray-500">
-              Current rate: {formatPercent(data.ledger.interestRates[data.ledger.interestRates.length - 1].rate)}
+          <div class="flex items-center gap-2 font-medium mt-1 pt-1 border-t">
+            <span class="text-sm text-gray-500">Total:</span>
+            <span class={account.balance >= 0 ? 'text-green-600' : 'text-red-600'}>
+              {formatCurrency(account.balance)}
             </span>
-          {/if}
+          </div>
         </div>
       </div>
     {/each}
