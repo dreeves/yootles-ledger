@@ -7,9 +7,6 @@ declare global {
 		// interface PageData {}
 		// interface Platform {}
 	}
-
-	// Use a more specific type for socketIoServer
-	const socketIoServer: import('socket.io').Server | undefined;
 }
 
 export {};

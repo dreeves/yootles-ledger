@@ -2,7 +2,12 @@
 	import { onDestroy } from 'svelte';
 	import Chart from 'chart.js/auto';
 	import type { Ledger } from '$lib/types/ledger';
-	import { formatCurrency, formatPercent, formatDate, parseDateFromInput } from '$lib/utils/formatting';
+	import {
+		formatCurrency,
+		formatPercent,
+		formatDate,
+		parseDateFromInput
+	} from '$lib/utils/formatting';
 
 	export let ledger: Ledger;
 	export let selectedAccount: string;

@@ -265,7 +265,11 @@ export class LedgerProcessor {
 
 				// If we get here and the line looks like it was meant to be parsed,
 				// it's probably a syntax error
-				if (trimmed.includes('account[') || trimmed.includes('iou[') || trimmed.includes('irate[')) {
+				if (
+					trimmed.includes('account[') ||
+					trimmed.includes('iou[') ||
+					trimmed.includes('irate[')
+				) {
 					throw new Error(`Invalid syntax at line ${lineNumber}: ${trimmed}`);
 				}
 			}

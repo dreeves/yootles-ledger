@@ -4,20 +4,19 @@ import type { Server } from 'http';
 import { createServer } from 'http';
 
 declare global {
-	// eslint-disable-next-line no-var
-	var socketIoServer: ReturnType<typeof setupWebSocket>;
-	var httpServer: Server;
+	const socketIoServer: ReturnType<typeof setupWebSocket>;
+	const httpServer: Server;
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
 	// Create HTTP server if it doesn't exist
-	if (!global.httpServer) {
+	if (!('httpServer' in global) || !global.httpServer) {
 		global.httpServer = createServer();
 		global.httpServer.listen(3000);
 	}
 
 	// Setup Socket.IO if not already setup
-	if (!global.socketIoServer) {
+	if (!('socketIoServer' in global) || !global.socketIoServer) {
 		global.socketIoServer = setupWebSocket(global.httpServer);
 	}
 
