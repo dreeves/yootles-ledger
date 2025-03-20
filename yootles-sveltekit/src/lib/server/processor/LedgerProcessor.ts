@@ -13,10 +13,20 @@ interface Balance {
 	interestAccrued: number;
 }
 
+interface UnregisteredAccount {
+	id: string;
+	usedInTransactions: Array<{
+		date: string;
+		description: string;
+		role: 'from' | 'to';
+	}>;
+}
+
 export class LedgerProcessor {
 	private accounts: Account[] = [];
 	private transactions: Transaction[] = [];
 	private interestRates: InterestRate[] = [];
+	private unregisteredAccounts = new Map<string, UnregisteredAccount>();
 
 	parseAccount(line: string) {
 		const match = line.match(/account\[\s*(.*?)\s*,\s*"(.*?)"(?:\s*,\s*"(.*?)")?\s*\]/);
@@ -96,12 +106,29 @@ export class LedgerProcessor {
 					? this.evaluateExpression(amountExpr)
 					: parseFloat(amountExpr);
 
+			const from = match[3].trim();
+			const to = match[4].trim();
+			const date = match[1];
+			const description = match[5];
+
+			// Track unregistered accounts
+			if (!this.accounts.some(a => a.id === from)) {
+				const account = this.unregisteredAccounts.get(from) || { id: from, usedInTransactions: [] };
+				account.usedInTransactions.push({ date, description, role: 'from' });
+				this.unregisteredAccounts.set(from, account);
+			}
+			if (!this.accounts.some(a => a.id === to)) {
+				const account = this.unregisteredAccounts.get(to) || { id: to, usedInTransactions: [] };
+				account.usedInTransactions.push({ date, description, role: 'to' });
+				this.unregisteredAccounts.set(to, account);
+			}
+
 			return {
-				date: match[1],
+				date,
 				amount,
-				from: match[3].trim(),
-				to: match[4].trim(),
-				description: match[5]
+				from,
+				to,
+				description
 			};
 		}
 
@@ -223,10 +250,11 @@ export class LedgerProcessor {
 		}));
 	}
 
-	processLedger(content: string): Ledger & { error?: string } {
+	processLedger(content: string): Ledger & { error?: string; unregisteredAccounts?: UnregisteredAccount[] } {
 		this.accounts = [];
 		this.transactions = [];
 		this.interestRates = [];
+		this.unregisteredAccounts.clear();
 
 		const lines = content.split('\n');
 		let reachedEnd = false;
@@ -289,7 +317,8 @@ export class LedgerProcessor {
 				id: 'local',
 				accounts: accountsWithBalances,
 				transactions: this.transactions,
-				interestRates: this.interestRates
+				interestRates: this.interestRates,
+				unregisteredAccounts: Array.from(this.unregisteredAccounts.values())
 			};
 		} catch (error) {
 			return {
@@ -297,7 +326,8 @@ export class LedgerProcessor {
 				accounts: [],
 				transactions: [],
 				interestRates: [],
-				error: error instanceof Error ? error.message : String(error)
+				error: error instanceof Error ? error.message : String(error),
+				unregisteredAccounts: []
 			};
 		}
 	}

@@ -16,6 +16,15 @@ export interface Transaction {
 	interestAccrued?: number;
 }
 
+export interface UnregisteredAccount {
+	id: string;
+	usedInTransactions: Array<{
+		date: string;
+		description: string;
+		role: 'from' | 'to';
+	}>;
+}
+
 export interface Ledger {
 	id?: string;
 	accounts: Account[];
@@ -25,4 +34,5 @@ export interface Ledger {
 		rate: number;
 	}>;
 	error?: string;
+	unregisteredAccounts?: UnregisteredAccount[];
 }

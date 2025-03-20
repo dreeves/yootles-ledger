@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Ledger } from '$lib/types/ledger';
 	import { RotateCw } from 'lucide-svelte';
+	import { AlertTriangle } from 'lucide-svelte';
 
 	export let data: { ledger: Ledger };
 	let isRefreshing = false;
@@ -60,8 +61,8 @@
 			: 0;
 </script>
 
-<div class="balance-display h-full overflow-auto rounded-lg bg-gray-100 p-4 shadow-sm">
-	<div class="sticky top-0 z-10 mb-4 flex items-center justify-between bg-gray-100">
+<div class="balance-display h-full overflow-auto rounded-lg bg-gray-50 p-4 shadow-sm">
+	<div class="sticky top-0 z-10 mb-4 flex items-center justify-between bg-gray-50">
 		<div>
 			<h2 class="text-xl font-semibold text-gray-700">Current Balances</h2>
 			{#if currentRate > 0}
@@ -83,6 +84,32 @@
 			</button>
 		</div>
 	</div>
+
+	{#if data.ledger.unregisteredAccounts?.length > 0}
+		<div class="mb-4 rounded-md bg-amber-50 p-4">
+			<div class="flex">
+				<div class="flex-shrink-0">
+					<AlertTriangle class="h-5 w-5 text-amber-400" />
+				</div>
+				<div class="ml-3">
+					<h3 class="text-sm font-medium text-amber-800">Unregistered Accounts Found</h3>
+					<div class="mt-2 text-sm text-amber-700">
+						<p>The following account IDs are used in transactions but not registered in the ledger:</p>
+						<ul class="mt-2 list-disc pl-5 space-y-1">
+							{#each data.ledger.unregisteredAccounts as account (account.id)}
+								<li>
+									<code class="font-mono bg-amber-100 px-1 py-0.5 rounded">{account.id}</code>
+									<span class="text-xs">
+										(used in {account.usedInTransactions.length} transaction{account.usedInTransactions.length === 1 ? '' : 's'})
+									</span>
+								</li>
+							{/each}
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
 
 	{#if lastError}
 		<div class="mb-4 rounded bg-red-50 p-3 text-red-700">
