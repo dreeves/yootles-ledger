@@ -2,6 +2,9 @@
 	import type { Ledger } from '$lib/types/ledger';
 	import { invalidate } from '$app/navigation';
 	import { RotateCw } from 'lucide-svelte';
+	import { createEventDispatcher } from 'svelte';
+
+	const dispatch = createEventDispatcher();
 
 	export let data: { ledger: Ledger };
 	let isRefreshing = false;
@@ -22,8 +25,9 @@
 				throw new Error('Failed to refresh balances');
 			}
 
-			await invalidate(`/api/ledger/${data.ledger.id}`);
-		} catch (error: unknown) {
+			// Force a full page reload to ensure we get fresh data
+			window.location.reload();
+		} catch (error) {
 			console.error('Error refreshing balances:', error);
 			lastError = error instanceof Error ? error.message : String(error);
 			alert('Failed to refresh balances. Please try again.');
