@@ -21,6 +21,12 @@
 
 	function isDateInRange(date: string): boolean {
 		if (!startDate && !endDate) return true;
+		if (endDate && date > parseDateFromInput(endDate)) return false;
+		return true;
+	}
+
+	function isDateInDisplayRange(date: string): boolean {
+		if (!startDate && !endDate) return true;
 		if (startDate && date < parseDateFromInput(startDate)) return false;
 		if (endDate && date > parseDateFromInput(endDate)) return false;
 		return true;
@@ -28,7 +34,7 @@
 
 	$: if (chartCanvas && selectedAccount) {
 		isCalculating = true;
-		console.log('Updating chart for account:', selectedAccount);
+		console.log('Updating chart for account:', selectedAccount, { startDate, endDate });
 
 		const ctx = chartCanvas.getContext('2d');
 		if (ctx) {
@@ -103,7 +109,7 @@
 
 					lastDate = event.date;
 
-					if (selectedAccount) {
+					if (selectedAccount && isDateInDisplayRange(event.date)) {
 						const principal =
 							balances.get(selectedAccount)! - interestAccrued.get(selectedAccount)!;
 						const interest = interestAccrued.get(selectedAccount)!;
