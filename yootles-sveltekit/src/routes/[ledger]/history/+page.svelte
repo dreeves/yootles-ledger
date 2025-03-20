@@ -12,6 +12,21 @@
   let showPercentages = false;
   let isCalculating = false;
 
+  // Load selected account from localStorage
+  onMount(() => {
+    const stored = localStorage.getItem(`selectedAccount-${data.ledger.id}`);
+    if (stored && data.ledger.accounts.some(a => a.id === stored)) {
+      selectedAccount = stored;
+    } else {
+      selectedAccount = data.ledger.accounts[0]?.id || '';
+    }
+  });
+
+  // Save selected account when it changes
+  $: if (selectedAccount) {
+    localStorage.setItem(`selectedAccount-${data.ledger.id}`, selectedAccount);
+  }
+
   function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
