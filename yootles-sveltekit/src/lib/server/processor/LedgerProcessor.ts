@@ -37,7 +37,44 @@ export class LedgerProcessor {
     }
   }
 
+  private expandMonthlyTransaction(startDate: string, endDate: string, amount: number, from: string, to: string, description: string): Transaction[] {
+    const [startYear, startMonth, startDay] = startDate.split('.').map(Number);
+    const [endYear, endMonth, endDay] = endDate === 'INDEFINITE' 
+      ? new Date().toISOString().split('T')[0].split('-').map(Number)
+      : endDate.split('.').map(Number);
+    
+    const start = new Date(startYear, startMonth - 1, startDay);
+    const end = new Date(endYear, endMonth - 1, endDay);
+    
+    const transactions: Transaction[] = [];
+    let current = new Date(start);
+    
+    while (current <= end) {
+      transactions.push({
+        date: `${current.getFullYear()}.${String(current.getMonth() + 1).padStart(2, '0')}.${String(current.getDate()).padStart(2, '0')}`,
+        amount,
+        from,
+        to,
+        description
+      });
+      
+      // Move to next month, keeping the same day of month
+      const nextMonth = new Date(current);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      
+      // If we went too far into next month (e.g. Jan 31 -> Feb 31), roll back to last valid day
+      while (nextMonth.getMonth() !== (current.getMonth() + 1) % 12) {
+        nextMonth.setDate(nextMonth.getDate() - 1);
+      }
+      
+      current = nextMonth;
+    }
+    
+    return transactions;
+  }
+
   parseTransaction(line: string): Transaction | null {
+    // Try regular transaction: iou[date, amount, from, to, "description"]
     let match = line.match(/iou\[\s*([\d.]+)\s*,\s*([^,]+)\s*,\s*(.*?)\s*,\s*(.*?)\s*,\s*"(.*?)"\s*\]/);
     if (match) {
       const amountExpr = match[2].trim();
@@ -54,21 +91,27 @@ export class LedgerProcessor {
       };
     }
 
+    // Try monthly transaction: iouMonthly[startDate, endDate, amount, from, to, "description"]
     match = line.match(/iouMonthly\[\s*([\d.]+)\s*,\s*([\d.]+|INDEFINITE)\s*,\s*([\d.]+)\s*,\s*(.*?)\s*,\s*(.*?)\s*,\s*"(.*?)"\s*\]/);
     if (match) {
-      const endDate = match[2] === 'INDEFINITE' 
-        ? new Date().toISOString().split('T')[0].replace(/-/g, '.')
-        : match[2];
+      const startDate = match[1];
+      const endDate = match[2];
+      const amount = parseFloat(match[3]);
+      const from = match[4].trim();
+      const to = match[5].trim();
+      const description = match[6];
 
-      return {
-        date: endDate,
-        amount: parseFloat(match[3]),
-        from: match[4].trim(),
-        to: match[5].trim(),
-        description: match[6]
-      };
+      // Generate all transactions in the series
+      const transactions = this.expandMonthlyTransaction(startDate, endDate, amount, from, to, description);
+      
+      // Add all transactions to the list except the last one
+      transactions.slice(0, -1).forEach(tx => this.transactions.push(tx));
+      
+      // Return the last transaction
+      return transactions[transactions.length - 1];
     }
 
+    // Only log if it looks like it might be a transaction
     if (line.includes('iou[') || line.includes('iouMonthly[')) {
       console.error('Failed to parse transaction:', line);
     }

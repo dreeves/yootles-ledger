@@ -15,44 +15,66 @@ describe('LedgerProcessor', () => {
     });
 
     it('should parse account without email', () => {
-      const result = processor.parseAccount('account[bob, "Bob Jones"]');
+      const result = processor.parseAccount('account[ppd, "Pine Peak Digital"]');
       expect(result).toEqual({
-        id: 'bob',
-        name: 'Bob Jones',
+        id: 'ppd',
+        name: 'Pine Peak Digital',
         email: ''
       });
     });
 
     it('should handle whitespace', () => {
-      const result = processor.parseAccount('  account[  bob  ,  "Bob Jones"  ]  ');
+      const result = processor.parseAccount('account[  bob  ,  "Bob Jones"  ,  "bob@example.com"  ]');
       expect(result).toEqual({
         id: 'bob',
         name: 'Bob Jones',
-        email: ''
+        email: 'bob@example.com'
       });
     });
   });
 
   describe('parseTransaction', () => {
     it('should parse transaction', () => {
-      const result = processor.parseTransaction('iou[50.25, alice, bob, 2024.03.19, "Lunch"]');
+      const result = processor.parseTransaction('iou[2024.03.19, 50.25, alice, bob, "Lunch"]');
       expect(result).toEqual({
+        date: '2024.03.19',
         amount: 50.25,
         from: 'alice',
         to: 'bob',
-        date: '2024.03.19',
         description: 'Lunch'
       });
     });
 
     it('should handle whitespace', () => {
-      const result = processor.parseTransaction('  iou[  50  ,  alice  ,  bob  ,  2024.03.19  ,  "Payment"  ]  ');
+      const result = processor.parseTransaction('iou[  2024.03.19  ,  50  ,  alice  ,  bob  ,  "Payment"  ]');
       expect(result).toEqual({
+        date: '2024.03.19',
         amount: 50,
         from: 'alice',
         to: 'bob',
-        date: '2024.03.19',
         description: 'Payment'
+      });
+    });
+
+    it('should handle expressions', () => {
+      const result = processor.parseTransaction('iou[2024.03.19, 25/60*20, alice, bob, "Lunch"]');
+      expect(result).toEqual({
+        date: '2024.03.19',
+        amount: (25/60)*20,
+        from: 'alice',
+        to: 'bob',
+        description: 'Lunch'
+      });
+    });
+
+    it('should handle monthly transactions', () => {
+      const result = processor.parseTransaction('iouMonthly[2024.01.15, 2024.03.19, 750, alice, bob, "Monthly rent"]');
+      expect(result).toEqual({
+        date: '2024.03.15',
+        amount: 750,
+        from: 'alice',
+        to: 'bob',
+        description: 'Monthly rent'
       });
     });
   });
@@ -75,7 +97,7 @@ describe('LedgerProcessor', () => {
     });
 
     it('should handle whitespace', () => {
-      const result = processor.parseInterestRate('  irate[  2024.03.19  ]  =  .05  ;  ');
+      const result = processor.parseInterestRate('irate[  2024.03.19  ,  0.05  ]');
       expect(result).toEqual({
         date: '2024.03.19',
         rate: 0.05
@@ -91,8 +113,8 @@ account[bob, "Bob", "bob@example.com"]
 
 irate[2024.01.01] = .05;
 
-iou[100, alice, bob, 2024.01.15, "Lunch"]
-iou[50, bob, alice, 2024.02.15, "Gas"]
+iou[2024.01.15, 100, alice, bob, "Lunch"]
+iou[2024.02.15, 50, bob, alice, "Gas"]
 
 [MAGIC_LEDGER_END]
 `;

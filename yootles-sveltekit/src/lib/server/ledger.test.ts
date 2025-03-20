@@ -40,12 +40,12 @@ describe('Ledger Parser', () => {
 
   describe('parseTransaction', () => {
     it('should parse valid transaction entries', () => {
-      const result = processor.parseTransaction('iou[50.25, alice, bob, 2024.03.19, "Lunch"]');
+      const result = processor.parseTransaction('iou[2024.03.19, 50.25, alice, bob, "Lunch"]');
       expect(result).toEqual({
+        date: '2024.03.19',
         amount: 50.25,
         from: 'alice',
         to: 'bob',
-        date: '2024.03.19',
         description: 'Lunch'
       });
     });
@@ -56,22 +56,22 @@ describe('Ledger Parser', () => {
     });
 
     it('should handle decimal amounts correctly', () => {
-      const result = processor.parseTransaction('iou[1234.56, alice, bob, 2024.03.19, "Big payment"]');
+      const result = processor.parseTransaction('iou[2024.03.19, 1234.56, alice, bob, "Big payment"]');
       expect(result?.amount).toBe(1234.56);
     });
 
     it('should handle descriptions with spaces', () => {
-      const result = processor.parseTransaction('iou[10, alice, bob, 2024.03.19, "Lunch at the cafe"]');
+      const result = processor.parseTransaction('iou[2024.03.19, 10, alice, bob, "Lunch at the cafe"]');
       expect(result?.description).toBe('Lunch at the cafe');
     });
 
     it('should handle whitespace variations', () => {
-      const result = processor.parseTransaction('iou[  50  ,  alice  ,  bob  ,  2024.03.19  ,  "Payment"  ]');
+      const result = processor.parseTransaction('iou[  2024.03.19  ,  50  ,  alice  ,  bob  ,  "Payment"  ]');
       expect(result).toEqual({
+        date: '2024.03.19',
         amount: 50,
         from: 'alice',
         to: 'bob',
-        date: '2024.03.19',
         description: 'Payment'
       });
     });
