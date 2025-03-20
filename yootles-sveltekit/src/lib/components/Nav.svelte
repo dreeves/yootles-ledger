@@ -13,10 +13,10 @@
 					<a href="/" class="text-xl font-bold text-gray-900">Yootles</a>
 				</div>
 				{#if isLedgerPage}
-					<div class="hidden sm:ml-6 sm:flex sm:items-center">
+					<a href="/{ledgerId}" class="hidden sm:ml-6 sm:flex sm:items-center">
 						<div class="text-gray-500">/</div>
 						<div class="ml-3 font-medium text-gray-900">{ledgerId}</div>
-					</div>
+					</a>
 				{/if}
 			</div>
 
