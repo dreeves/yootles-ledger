@@ -58,13 +58,14 @@ export class WolframClient {
       return result;
     } catch (error) {
       console.error('Wolfram client error:', {
-        error: error.message,
-        stack: error.stack,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
         config: this.config
       });
+
       return {
         status: 'error',
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date().toISOString()
       };
     }

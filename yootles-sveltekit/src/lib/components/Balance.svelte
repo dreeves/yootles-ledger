@@ -23,9 +23,9 @@
       }
 
       await invalidate(`/api/ledger/${data.ledger.id}`);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error refreshing balances:', error);
-      lastError = error.message;
+      lastError = error instanceof Error ? error.message : String(error);
       alert('Failed to refresh balances. Please try again.');
     } finally {
       isRefreshing = false;

@@ -8,8 +8,8 @@ export const load: PageServerLoad = async ({ params }) => {
     return {
       ledger
     };
-  } catch (e) {
-    const message = e.message;
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
     switch (message) {
       case 'INVALID_NAME':
         throw error(400, 'Invalid ledger name. Use only letters, numbers, hyphens, and underscores.');

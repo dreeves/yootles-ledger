@@ -9,7 +9,9 @@
   let socket: Socket;
   
   onMount(() => {
-    socket = initSocket(data.ledger.id);
+    if (data.ledger.id) {
+      socket = initSocket(data.ledger.id);
+    }
   });
 
   onDestroy(() => {

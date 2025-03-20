@@ -12,8 +12,9 @@ export const load: PageServerLoad = async ({ params }) => {
     return {
       ledger
     };
-  } catch (e) {
-    if (e.message === 'Invalid ledger name') {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
+    if (message === 'Invalid ledger name') {
       throw error(404, 'Ledger not found');
     }
     console.error('Error loading ledger:', e);

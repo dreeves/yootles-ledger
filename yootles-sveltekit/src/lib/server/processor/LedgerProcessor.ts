@@ -24,7 +24,9 @@ export class LedgerProcessor {
     return {
       id: match[1].trim(),
       name: match[2],
-      email: match[3] || ''
+      email: match[3] || '',
+      balance: 0,
+      interestAccrued: 0
     };
   }
 

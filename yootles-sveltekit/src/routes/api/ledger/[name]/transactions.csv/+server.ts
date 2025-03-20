@@ -3,7 +3,6 @@ import type { RequestHandler } from './$types';
 import { loadLedger } from '$lib/server/ledger';
 
 function formatDate(date: string): string {
-  // Return date in YYYY.MM.DD format (already in this format)
   return date;
 }
 
@@ -48,8 +47,9 @@ export const GET: RequestHandler = async ({ params }) => {
         'Content-Disposition': `attachment; filename="${params.name}-transactions.csv"`
       }
     });
-  } catch (e) {
-    if (e.message === 'Invalid ledger name') {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
+    if (message === 'Invalid ledger name') {
       throw error(404, 'Ledger not found');
     }
     throw error(500, 'Failed to generate CSV');

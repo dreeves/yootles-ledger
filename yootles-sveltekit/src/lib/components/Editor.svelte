@@ -30,6 +30,5 @@
     src="https://padm.us/yl-{data.ledger.id}"
     style="width: 100%; height: 600px; border: none;"
     title="Ledger Editor"
-    crossorigin="use-credentials"
   ></iframe>
 </div>
