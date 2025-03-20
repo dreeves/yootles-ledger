@@ -13,22 +13,29 @@
 		if (principal === 0) return '';
 		return formatPercent(interest / principal);
 	}
+
+	$: prettyName = isUnregistered ? `Unregistered Account ${account.id}` : account.name;
 </script>
 
 <div
 	class="rounded-lg p-2.5 transition-colors {isUnregistered ? 'bg-amber-50/80 border-amber-200' : 'bg-white/80 border-gray-200 hover:border-gray-300'} border"
 >
 	<div class="mb-1.5">
-		<h3 class="font-medium break-words text-gray-700">
-			{account.name}
-			{#if isUnregistered && 'transactionCount' in account}
-				<span class="text-xs text-amber-600">
-					(unregistered, used in {account.transactionCount} transaction{account.transactionCount === 1 ? '' : 's'})
-				</span>
-			{/if}
-		</h3>
+		<div class="flex justify-between items-baseline">
+			<h3 class="font-medium break-words text-gray-700">
+				{prettyName}
+			</h3>
+			<span class="text-sm text-gray-500 font-mono">
+				{account.id}
+			</span>
+		</div>
 		{#if account.email}
 			<p class="text-xs break-words text-gray-500">{account.email}</p>
+		{/if}
+		{#if isUnregistered}
+			<p class="text-xs text-amber-600 mt-0.5">
+				Used in {account.transactionCount} transaction{account.transactionCount === 1 ? '' : 's'}
+			</p>
 		{/if}
 	</div>
 
