@@ -23,14 +23,14 @@
 	});
 </script>
 
-<div class="editor-container h-full overflow-hidden rounded-lg bg-gray-100 shadow">
-	<div class="border-b border-gray-300 p-4">
-		<h2 class="text-xl font-semibold text-gray-700">Ledger Editor</h2>
+<div class="editor-container h-full overflow-hidden rounded-lg bg-custom-primary shadow">
+	<div class="border-b border-gray-200 p-3">
+		<h2 class="text-lg font-medium text-gray-700">Ledger Editor</h2>
 	</div>
 
 	<iframe
 		src="https://padm.us/yl-{data.ledger.id}"
-		style="width: 100%; height: calc(100% - 4rem); border: none;"
+		style="width: 100%; height: calc(100% - 3.5rem); border: none;"
 		title="Ledger Editor"
 	></iframe>
 </div>

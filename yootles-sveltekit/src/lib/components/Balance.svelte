@@ -61,10 +61,10 @@
 			: 0;
 </script>
 
-<div class="balance-display h-full overflow-auto rounded-lg bg-gray-50 p-4 shadow-sm">
-	<div class="sticky top-0 z-10 mb-4 flex items-center justify-between bg-gray-50">
+<div class="balance-display h-full overflow-auto rounded-lg bg-custom-primary p-3 shadow-sm">
+	<div class="sticky top-0 z-10 mb-3 flex items-center justify-between bg-custom-primary">
 		<div>
-			<h2 class="text-xl font-semibold text-gray-700">Current Balances</h2>
+			<h2 class="text-lg font-medium text-gray-700">Current Balances</h2>
 			{#if currentRate > 0}
 				<p class="mt-0.5 text-sm text-gray-500">
 					Current interest rate: {formatPercent(currentRate)}
@@ -73,34 +73,34 @@
 		</div>
 		<div>
 			<button
-				class="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 disabled:opacity-50"
+				class="rounded-full p-2 text-gray-500 transition-colors hover:bg-custom-secondary hover:text-gray-700 disabled:opacity-50"
 				on:click={refreshBalances}
 				disabled={isRefreshing}
 				title="Refresh Balances"
 			>
 				<div class:animate-spin={isRefreshing}>
-					<RotateCw size={20} />
+					<RotateCw size={18} />
 				</div>
 			</button>
 		</div>
 	</div>
 
 	{#if data.ledger.unregisteredAccounts?.length > 0}
-		<div class="mb-4 rounded-md bg-amber-50 p-4">
+		<div class="mb-3 rounded-md bg-amber-50/80 p-3">
 			<div class="flex">
 				<div class="flex-shrink-0">
-					<AlertTriangle class="h-5 w-5 text-amber-400" />
+					<AlertTriangle class="h-4 w-4 text-amber-400" />
 				</div>
-				<div class="ml-3">
+				<div class="ml-2">
 					<h3 class="text-sm font-medium text-amber-800">Unregistered Accounts Found</h3>
-					<div class="mt-2 text-sm text-amber-700">
-						<p>The following account IDs are used in transactions but not registered in the ledger:</p>
-						<ul class="mt-2 list-disc pl-5 space-y-1">
+					<div class="mt-1 text-sm text-amber-700">
+						<p class="text-xs">The following account IDs are used in transactions but not registered:</p>
+						<ul class="mt-1 space-y-0.5 text-xs">
 							{#each data.ledger.unregisteredAccounts as account (account.id)}
 								<li>
-									<code class="font-mono bg-amber-100 px-1 py-0.5 rounded">{account.id}</code>
+									<code class="font-mono bg-amber-100/80 px-1 rounded">{account.id}</code>
 									<span class="text-xs">
-										(used in {account.usedInTransactions.length} transaction{account.usedInTransactions.length === 1 ? '' : 's'})
+										({account.usedInTransactions.length} transaction{account.usedInTransactions.length === 1 ? '' : 's'})
 									</span>
 								</li>
 							{/each}
@@ -112,29 +112,27 @@
 	{/if}
 
 	{#if lastError}
-		<div class="mb-4 rounded bg-red-50 p-3 text-red-700">
+		<div class="mb-3 rounded bg-red-50/80 p-2 text-sm text-red-700">
 			{lastError}
 		</div>
 	{/if}
 
-	<div
-		class="grid auto-rows-fr grid-cols-1 gap-3 md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]"
-	>
+	<div class="grid auto-rows-fr grid-cols-1 gap-2 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
 		{#each data.ledger.accounts as account (account.id)}
 			{@const balance = account.balance ?? 0}
 			{@const interestAccrued = account.interestAccrued ?? 0}
 			{@const principal = balance - interestAccrued}
 			<div
-				class="rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:border-gray-300"
+				class="rounded-lg border border-gray-200 bg-white/80 p-2.5 transition-colors hover:border-gray-300"
 			>
-				<div class="mb-2">
+				<div class="mb-1.5">
 					<h3 class="font-medium break-words text-gray-700">{account.name}</h3>
 					{#if account.email}
-						<p class="text-sm break-words text-gray-500">{account.email}</p>
+						<p class="text-xs break-words text-gray-500">{account.email}</p>
 					{/if}
 				</div>
 
-				<div class="space-y-1.5">
+				<div class="space-y-1">
 					<div class="flex items-baseline justify-between text-sm">
 						<span class="text-gray-500">Principal:</span>
 						<span class={principal >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
@@ -158,12 +156,10 @@
 						</div>
 					{/if}
 
-					<div class="mt-1.5 border-t border-gray-100 pt-1.5">
+					<div class="mt-1 border-t border-gray-100 pt-1">
 						<div class="flex items-baseline justify-between">
 							<span class="font-medium text-gray-600">Total:</span>
-							<span
-								class={`font-medium ${balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
-							>
+							<span class={`font-medium ${balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
 								{formatCurrency(balance)}
 							</span>
 						</div>

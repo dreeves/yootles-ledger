@@ -5,3 +5,22 @@
 body {
 	@apply bg-gray-100;
 }
+
+/* Custom color scheme */
+:root {
+  --bg-primary: #f8f9fa;
+  --bg-secondary: #e9ecef;
+  --bg-tertiary: #dee2e6;
+}
+
+.bg-custom-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-custom-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.bg-custom-tertiary {
+  background-color: var(--bg-tertiary);
+}
