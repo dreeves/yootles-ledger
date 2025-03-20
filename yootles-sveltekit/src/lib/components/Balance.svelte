@@ -90,9 +90,14 @@
           <span class={account.balance >= 0 ? 'text-green-600' : 'text-red-600'}>
             {formatCurrency(account.balance)}
           </span>
+          {#if account.interestAccrued !== 0}
+            <span class="text-sm text-gray-500">
+              Interest: {formatCurrency(account.interestAccrued)}
+            </span>
+          {/if}
           {#if data.ledger.interestRates.length > 0}
             <span class="text-sm text-gray-500">
-              {formatPercent(data.ledger.interestRates[data.ledger.interestRates.length - 1].rate)} interest
+              Current rate: {formatPercent(data.ledger.interestRates[data.ledger.interestRates.length - 1].rate)}
             </span>
           {/if}
         </div>
