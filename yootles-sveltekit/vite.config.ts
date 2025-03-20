@@ -9,6 +9,12 @@ export default defineConfig({
 	server: {
 		watch: {
 			ignored: ['**/dev.log']
+		},
+		proxy: {
+			'/socket.io': {
+				target: 'ws://localhost:3000',
+				ws: true
+			}
 		}
 	},
 
