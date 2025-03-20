@@ -64,29 +64,81 @@
 
 	let allAccounts: CombinedAccount[] = [
 		...data.ledger.accounts,
-		...(data.ledger.unregisteredAccounts?.map((ua) => ({
-			id: ua.id,
-			name: ua.id,
-			email: '',
-			balance: 0,
-			interestAccrued: 0,
-			isUnregistered: true,
-			transactionCount: ua.usedInTransactions.length
-		})) ?? [])
+		...(data.ledger.unregisteredAccounts?.map((ua) => {
+			// Find all transactions involving this account
+			const transactions = data.ledger.transactions.filter(
+				(tx) => tx.from === ua.id || tx.to === ua.id
+			);
+
+			// Calculate total balance and interest
+			const { balance, interestAccrued } = transactions.reduce(
+				(acc, tx) => {
+					if (tx.from === ua.id) {
+						return {
+							balance: acc.balance - tx.amount,
+							// For now, we don't have a way to calculate interest for unregistered accounts
+							interestAccrued: 0
+						};
+					} else {
+						return {
+							balance: acc.balance + tx.amount,
+							interestAccrued: 0
+						};
+					}
+				},
+				{ balance: 0, interestAccrued: 0 }
+			);
+
+			return {
+				id: ua.id,
+				name: ua.id,
+				email: '',
+				balance,
+				interestAccrued,
+				isUnregistered: true,
+				transactionCount: ua.usedInTransactions.length
+			};
+		}) ?? [])
 	];
 
 	$: {
 		allAccounts = [
 			...data.ledger.accounts,
-			...(data.ledger.unregisteredAccounts?.map((ua) => ({
-				id: ua.id,
-				name: ua.id,
-				email: '',
-				balance: 0,
-				interestAccrued: 0,
-				isUnregistered: true,
-				transactionCount: ua.usedInTransactions.length
-			})) ?? [])
+			...(data.ledger.unregisteredAccounts?.map((ua) => {
+				// Find all transactions involving this account
+				const transactions = data.ledger.transactions.filter(
+					(tx) => tx.from === ua.id || tx.to === ua.id
+				);
+
+				// Calculate total balance and interest
+				const { balance, interestAccrued } = transactions.reduce(
+					(acc, tx) => {
+						if (tx.from === ua.id) {
+							return {
+								balance: acc.balance - tx.amount,
+								// For now, we don't have a way to calculate interest for unregistered accounts
+								interestAccrued: 0
+							};
+						} else {
+							return {
+								balance: acc.balance + tx.amount,
+								interestAccrued: 0
+							};
+						}
+					},
+					{ balance: 0, interestAccrued: 0 }
+				);
+
+				return {
+					id: ua.id,
+					name: ua.id,
+					email: '',
+					balance,
+					interestAccrued,
+					isUnregistered: true,
+					transactionCount: ua.usedInTransactions.length
+				};
+			}) ?? [])
 		];
 	}
 </script>
