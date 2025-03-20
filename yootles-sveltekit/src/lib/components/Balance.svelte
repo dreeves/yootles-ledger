@@ -64,10 +64,10 @@
 			: 0;
 </script>
 
-<div class="balance-display h-full overflow-auto rounded-lg bg-white p-4 shadow">
-  <div class="sticky top-0 z-10 mb-4 flex items-center justify-between bg-white">
+<div class="balance-display h-full overflow-auto rounded-lg bg-gray-100 p-4 shadow-sm">
+  <div class="sticky top-0 z-10 mb-4 flex items-center justify-between bg-gray-100">
     <div>
-      <h2 class="text-xl font-semibold">Current Balances</h2>
+      <h2 class="text-xl font-semibold text-gray-700">Current Balances</h2>
       {#if currentRate > 0}
         <p class="mt-0.5 text-sm text-gray-500">
           Current interest rate: {formatPercent(currentRate)}
@@ -76,7 +76,7 @@
     </div>
     <div>
       <button
-        class="rounded-full p-2 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600 disabled:opacity-50"
+        class="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 disabled:opacity-50"
         on:click={refreshBalances}
         disabled={isRefreshing}
         title="Refresh Balances"
@@ -89,7 +89,7 @@
   </div>
 
   {#if lastError}
-    <div class="mb-4 rounded bg-red-100 p-3 text-red-700">
+    <div class="mb-4 rounded bg-red-50 p-3 text-red-700">
       {lastError}
     </div>
   {/if}
@@ -100,10 +100,10 @@
     {#each data.ledger.accounts as account (account.id)}
       {@const principal = account.balance - account.interestAccrued}
       <div
-        class="rounded-lg border border-gray-200 p-3 transition-colors hover:border-gray-300"
+        class="rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:border-gray-300"
       >
         <div class="mb-2">
-          <h3 class="font-medium break-words text-gray-900">{account.name}</h3>
+          <h3 class="font-medium break-words text-gray-700">{account.name}</h3>
           {#if account.email}
             <p class="text-sm break-words text-gray-500">{account.email}</p>
           {/if}
@@ -111,21 +111,21 @@
 
         <div class="space-y-1.5">
           <div class="flex items-baseline justify-between text-sm">
-            <span class="text-gray-600">Principal:</span>
-            <span class={principal >= 0 ? 'text-green-600' : 'text-red-600'}>
+            <span class="text-gray-500">Principal:</span>
+            <span class={principal >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
               {formatCurrency(principal)}
             </span>
           </div>
 
           {#if account.interestAccrued !== 0}
             <div class="flex items-baseline justify-between text-sm">
-              <span class="text-gray-600">Interest:</span>
+              <span class="text-gray-500">Interest:</span>
               <div class="text-right">
-                <span class={account.interestAccrued >= 0 ? 'text-green-600' : 'text-red-600'}>
+                <span class={account.interestAccrued >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
                   {formatCurrency(account.interestAccrued)}
                 </span>
                 {#if principal !== 0}
-                  <span class="ml-1 text-xs text-gray-500">
+                  <span class="ml-1 text-xs text-gray-400">
                     ({calculateInterestPercent(principal, account.interestAccrued)})
                   </span>
                 {/if}
@@ -135,9 +135,9 @@
 
           <div class="mt-1.5 border-t border-gray-100 pt-1.5">
             <div class="flex items-baseline justify-between">
-              <span class="font-medium text-gray-900">Total:</span>
+              <span class="font-medium text-gray-600">Total:</span>
               <span
-                class={`font-medium ${account.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                class={`font-medium ${account.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
               >
                 {formatCurrency(account.balance)}
               </span>
