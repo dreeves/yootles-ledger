@@ -23,7 +23,7 @@
   });
 </script>
 
-<div class="editor-container mt-6 overflow-hidden rounded-lg bg-white shadow">
+<div class="editor-container overflow-hidden rounded-lg bg-white shadow">
   <div class="border-b p-4">
     <h2 class="text-xl font-semibold">Ledger Editor</h2>
   </div>

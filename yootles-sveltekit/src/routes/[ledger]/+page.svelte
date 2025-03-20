@@ -22,11 +22,11 @@
 </script>
 
 <div class="container mx-auto px-4">
-  {#if data.error}
-    <div class="mt-4 rounded-lg bg-red-50 p-4 text-red-700">
+  {#if 'error' in data && data.error}
+    <div class="mt-4 mb-6 rounded-lg bg-red-50 p-4 text-red-700">
       <p class="font-medium">Warning: Your ledger has syntax errors</p>
       <p class="mt-1">{data.error}</p>
-      <p class="mt-1">Click "Refresh Balances" after fixing the error.</p>
+      <p class="mt-1">Refresh the page after fixing the error.</p>
     </div>
   {/if}
 
