@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { Ledger } from '$lib/types/ledger';
+  import DateRangeFilter from '$lib/components/DateRangeFilter.svelte';
+  import { formatCurrency, formatPercent, formatDate, parseDateFromInput } from '$lib/utils/formatting';
   
   export let data: { ledger: Ledger };
 
@@ -7,36 +9,6 @@
   let sortDirection: 'asc' | 'desc' = 'desc';
   let startDate: string = '';
   let endDate: string = '';
-
-  function formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  }
-
-  function formatDate(date: string): string {
-    return date;
-  }
-
-  function formatDateForInput(date: string): string {
-    const [year, month, day] = date.split('.');
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-  }
-
-  function parseDateFromInput(date: string): string {
-    if (!date) return '';
-    const [year, month, day] = date.split('-');
-    return `${year}.${month}.${day}`;
-  }
-
-  function formatPercent(rate: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(rate);
-  }
 
   $: filteredTransactions = data.ledger.transactions.filter(tx => {
     if (selectedAccount && tx.from !== selectedAccount && tx.to !== selectedAccount) {
@@ -74,13 +46,6 @@
   function toggleSort() {
     sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
   }
-
-  // Initialize date range if there are transactions
-  $: if (data.ledger.transactions.length > 0 && !startDate && !endDate) {
-    const dates = data.ledger.transactions.map(tx => tx.date);
-    startDate = formatDateForInput(dates.reduce((a, b) => a < b ? a : b));
-    endDate = formatDateForInput(dates.reduce((a, b) => a > b ? a : b));
-  }
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -107,10 +72,14 @@
 
   <div class="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">
+      <label 
+        for="account-filter" 
+        class="block text-sm font-medium text-gray-700 mb-1"
+      >
         Filter by Account
       </label>
       <select
+        id="account-filter"
         bind:value={selectedAccount}
         class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
       >
@@ -121,33 +90,21 @@
       </select>
     </div>
 
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">
-        Start Date
-      </label>
-      <input
-        type="date"
-        bind:value={startDate}
-        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-      />
-    </div>
+    <DateRangeFilter
+      bind:startDate
+      bind:endDate
+      transactions={data.ledger.transactions}
+    />
 
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">
-        End Date
-      </label>
-      <input
-        type="date"
-        bind:value={endDate}
-        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-      />
-    </div>
-
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">
+      <label 
+        for="sort-order" 
+        class="block text-sm font-medium text-gray-700 mb-1"
+      >
         Sort Order
       </label>
       <button
+        id="sort-order"
         on:click={toggleSort}
         class="mt-1 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
       >

@@ -2,6 +2,8 @@
   import { onMount, onDestroy } from 'svelte';
   import Chart from 'chart.js/auto';
   import type { Ledger } from '$lib/types/ledger';
+  import DateRangeFilter from '$lib/components/DateRangeFilter.svelte';
+  import { formatCurrency, formatPercent, formatDate, parseDateFromInput } from '$lib/utils/formatting';
   
   export let data: { ledger: Ledger };
   let selectedAccount = '';
@@ -12,7 +14,6 @@
   let showPercentages = false;
   let isCalculating = false;
 
-  // Load selected account from localStorage
   onMount(() => {
     const stored = localStorage.getItem(`selectedAccount-${data.ledger.id}`);
     if (stored && data.ledger.accounts.some(a => a.id === stored)) {
@@ -22,41 +23,8 @@
     }
   });
 
-  // Save selected account when it changes
   $: if (selectedAccount) {
     localStorage.setItem(`selectedAccount-${data.ledger.id}`, selectedAccount);
-  }
-
-  function formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
-  }
-
-  function formatPercent(rate: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(rate);
-  }
-
-  function formatDate(date: string): string {
-    return date;
-  }
-
-  function formatDateForInput(date: string): string {
-    const [year, month, day] = date.split('.');
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-  }
-
-  function parseDateFromInput(date: string): string {
-    if (!date) return '';
-    const [year, month, day] = date.split('-');
-    return `${year}.${month}.${day}`;
   }
 
   $: filteredTransactions = data.ledger.transactions
@@ -70,7 +38,7 @@
       }
       return true;
     })
-    .sort((a, b) => b.date.localeCompare(a.date)); // Sort descending for display
+    .sort((a, b) => b.date.localeCompare(a.date));
 
   $: chronologicalTransactions = [...filteredTransactions].sort((a, b) => a.date.localeCompare(b.date));
 
@@ -265,7 +233,6 @@
     }
   });
 
-  // Initialize date range if there are transactions
   $: if (data.ledger.transactions.length > 0 && !startDate && !endDate) {
     const dates = data.ledger.transactions.map(tx => tx.date);
     startDate = formatDateForInput(dates.reduce((a, b) => a < b ? a : b));
@@ -300,43 +267,13 @@
       Select an account to view its balance history
     </div>
   {:else}
-    <div class="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
-          Start Date
-        </label>
-        <input
-          type="date"
-          bind:value={startDate}
-          class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-        />
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
-          End Date
-        </label>
-        <input
-          type="date"
-          bind:value={endDate}
-          class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-        />
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
-          Show Interest Rate
-        </label>
-        <label class="mt-1 inline-flex items-center">
-          <input
-            type="checkbox"
-            bind:checked={showPercentages}
-            class="form-checkbox h-4 w-4 text-blue-600"
-          >
-          <span class="ml-2">Show rate over time</span>
-        </label>
-      </div>
-    </div>
+    <DateRangeFilter
+      bind:startDate
+      bind:endDate
+      bind:showInterestRate={showPercentages}
+      transactions={data.ledger.transactions}
+      onShowInterestRateChange={(value) => showPercentages = value}
+    />
 
     <div class="bg-white rounded-lg shadow p-4">
       <div style="height: 400px; position: relative; width: 100%;">
