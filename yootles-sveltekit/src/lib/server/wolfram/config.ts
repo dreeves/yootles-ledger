@@ -1,16 +1,17 @@
-import { dev } from '$app/environment';
+import { env } from '$env/dynamic/private';
 
-export function getWolframConfig() {
+export interface WolframConfig {
+	baseUrl: string;
+}
+
+export function getWolframConfig(): WolframConfig {
 	return {
-		baseUrl: 'https://www.wolframcloud.com/obj/narthura/yootles/processLedger',
-		timeout: parseInt(process.env.WOLFRAM_TIMEOUT || '30000', 10),
-		retryAttempts: parseInt(process.env.WOLFRAM_RETRY_ATTEMPTS || '3', 10)
+		baseUrl: env.WOLFRAM_API_URL || 'http://localhost:3000/api/wolfram'
 	};
 }
 
-// For development/testing
-export const mockConfig = {
-	baseUrl: 'https://www.wolframcloud.com/obj/narthura/yootles/processLedger',
-	timeout: 5000,
-	retryAttempts: 1
-};
+export function mockConfig(): WolframConfig {
+	return {
+		baseUrl: 'http://localhost:3000/api/wolfram'
+	};
+}

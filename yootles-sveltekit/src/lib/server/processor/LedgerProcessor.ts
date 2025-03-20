@@ -34,7 +34,7 @@ export class LedgerProcessor {
 		expr = expr.replace(/(\d+)\/(\d+)/g, '($1/$2)');
 		try {
 			return new Function(`return ${expr}`)();
-		} catch (e) {
+		} catch {
 			console.error('Failed to evaluate expression:', expr);
 			return 0;
 		}
@@ -50,12 +50,12 @@ export class LedgerProcessor {
 	): Transaction[] {
 		const [startYear, startMonth, startDay] = startDate.split('.').map(Number);
 
-		let [endYear, endMonth, endDay] =
+		const [endYear, endMonth, endDay] =
 			endDate === 'INDEFINITE'
 				? (() => {
 						const now = new Date();
 						now.setMonth(now.getMonth() + 1);
-						return [now.getFullYear(), now.getMonth() + 1, startDay];
+						return [now.getFullYear(), now.getMonth() + 1, startDay] as const;
 					})()
 				: endDate.split('.').map(Number);
 

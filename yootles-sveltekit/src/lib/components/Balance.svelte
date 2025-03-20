@@ -93,7 +93,7 @@
 	<div
 		class="grid auto-rows-fr grid-cols-1 gap-4 md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]"
 	>
-		{#each data.ledger.accounts as account}
+		{#each data.ledger.accounts as account (account.id)}
 			{@const principal = account.balance - account.interestAccrued}
 			<div
 				class="h-full rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300"

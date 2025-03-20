@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { Ledger } from '$lib/types/ledger';
+	import type { Socket } from 'socket.io-client';
 	import { onMount } from 'svelte';
 
 	export let data: { ledger: Ledger };
-	export let socket: any;
+	export let socket: Socket;
 
 	let lastUpdate = 0;
 	const DEBOUNCE_MS = 1000; // Only allow updates once per second

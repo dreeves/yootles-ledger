@@ -79,7 +79,7 @@
 				class="mt-1 block w-full rounded-md border-gray-300 py-2 pr-10 pl-3 text-base focus:border-blue-500 focus:ring-blue-500 focus:outline-none sm:text-sm"
 			>
 				<option value="">All Accounts</option>
-				{#each data.ledger.accounts as account}
+				{#each data.ledger.accounts as account (account.id)}
 					<option value={account.id}>{account.name}</option>
 				{/each}
 			</select>
@@ -147,7 +147,7 @@
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gray-200 bg-white">
-							{#each sortedInterestRates as rate}
+							{#each sortedInterestRates as rate (rate.date)}
 								<tr class="hover:bg-gray-50">
 									<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
 										{formatDate(rate.date)}
@@ -197,7 +197,7 @@
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-gray-200 bg-white">
-					{#each sortedTransactions as tx}
+					{#each sortedTransactions as tx (tx.date + tx.from + tx.to + tx.amount)}
 						<tr class="hover:bg-gray-50">
 							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
 								{formatDate(tx.date)}

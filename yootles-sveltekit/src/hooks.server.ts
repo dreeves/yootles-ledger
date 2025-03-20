@@ -1,17 +1,21 @@
 import type { Handle } from '@sveltejs/kit';
 import { setupWebSocket } from '$lib/server/socket';
+import type { Server } from 'http';
 
 declare global {
 	// eslint-disable-next-line no-var
-	var socketIoServer: any;
+	var socketIoServer: ReturnType<typeof setupWebSocket>;
+}
+
+interface NodePlatform {
+	server?: Server;
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
 	// Store the raw server instance for Socket.IO setup
-	// @ts-ignore - platform.server is available in node adapter
-	if (!global.socketIoServer && event.platform?.server) {
-		// @ts-ignore - platform.server is available in node adapter
-		global.socketIoServer = setupWebSocket(event.platform.server);
+	const platform = event.platform as unknown as NodePlatform;
+	if (!global.socketIoServer && platform?.server) {
+		global.socketIoServer = setupWebSocket(platform.server);
 	}
 
 	return resolve(event);

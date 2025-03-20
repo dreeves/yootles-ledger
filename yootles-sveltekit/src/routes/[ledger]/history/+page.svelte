@@ -266,7 +266,7 @@
 		<div class="flex gap-4">
 			<select bind:value={selectedAccount} class="rounded border px-3 py-2">
 				<option value="">Select Account</option>
-				{#each data.ledger.accounts as account}
+				{#each data.ledger.accounts as account (account.id)}
 					<option value={account.id}>{account.name}</option>
 				{/each}
 			</select>
@@ -336,7 +336,7 @@
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gray-200 bg-white">
-							{#each filteredTransactions as tx, i}
+							{#each filteredTransactions as tx (tx.date + tx.from + tx.to + tx.amount)}
 								{@const previousTransactions = chronologicalTransactions.slice(
 									0,
 									chronologicalTransactions.indexOf(tx) + 1
