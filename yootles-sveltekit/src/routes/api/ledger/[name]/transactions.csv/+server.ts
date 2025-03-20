@@ -3,8 +3,8 @@ import type { RequestHandler } from './$types';
 import { loadLedger } from '$lib/server/ledger';
 
 function formatDate(date: string): string {
-  const [year, month, day] = date.split('.');
-  return `${year}-${month}-${day}`;
+  // Return date in YYYY.MM.DD format (already in this format)
+  return date;
 }
 
 function escapeCSV(str: string): string {

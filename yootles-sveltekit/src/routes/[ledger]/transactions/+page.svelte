@@ -16,8 +16,7 @@
   }
 
   function formatDate(date: string): string {
-    const [year, month, day] = date.split('.');
-    return new Date(+year, +month - 1, +day).toLocaleDateString();
+    return date;
   }
 
   function formatDateForInput(date: string): string {

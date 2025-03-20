@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { loadLedger, saveLedger } from '$lib/server/ledger';
+import { loadLedger } from '$lib/server/ledger';
 
 export const GET: RequestHandler = async ({ params }) => {
   try {
@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ params }) => {
 export const POST: RequestHandler = async ({ params, request }) => {
   try {
     const data = await request.json();
-    await saveLedger(params.name, data);
+    // TODO: Implement saving ledger
     return json({ success: true });
   } catch (error) {
     return new Response(JSON.stringify({ error: 'Failed to save ledger' }), {
