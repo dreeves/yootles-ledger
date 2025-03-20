@@ -21,20 +21,20 @@
   });
 </script>
 
-<div class="container mx-auto px-4">
-  {#if 'error' in data && data.error}
-    <div class="mt-4 mb-6 rounded-lg bg-red-50 p-4 text-red-700">
+<div class="container mx-auto h-[calc(100vh-8rem)] px-4">
+  {#if data.error}
+    <div class="mb-4 rounded-lg bg-red-50 p-4 text-red-700">
       <p class="font-medium">Warning: Your ledger has syntax errors</p>
       <p class="mt-1">{data.error}</p>
-      <p class="mt-1">Refresh the page after fixing the error.</p>
+      <p class="mt-1">Click "Refresh Balances" to check if the error has been fixed.</p>
     </div>
   {/if}
 
-  <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-    <div class="lg:col-span-1">
-      <Balance {data} />
+  <div class="grid h-full grid-cols-1 gap-8 lg:grid-cols-3">
+    <div class="h-full overflow-auto lg:col-span-1">
+      <Balance {data} on:refresh={handleRefresh} />
     </div>
-    <div class="lg:col-span-2">
+    <div class="h-full lg:col-span-2">
       <Editor {data} {socket} />
     </div>
   </div>
