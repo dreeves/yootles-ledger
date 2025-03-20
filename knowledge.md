@@ -11,6 +11,11 @@
 - Long-polling system for real-time balance updates
 - Data stored in `/data` directory (gitignored)
 
+## Ledger Names
+- Must contain only letters, numbers, underscores, and hyphens
+- Cannot be "socket.io" (reserved)
+- Example valid names: "my-ledger", "ledger_2024", "family-expenses-2024"
+
 ## Key Files
 - `ledger.m` - Main Mathematica script for processing ledgers
 - `nightly.m` - Updates transaction histories for all users nightly

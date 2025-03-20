@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Ledger } from '$lib/types/ledger';
   import { invalidate } from '$app/navigation';
+  import { RotateCw } from 'lucide-svelte';
   
   export let data: { ledger: Ledger };
   let isRefreshing = false;
@@ -70,15 +71,14 @@
     </div>
     <div>
       <button 
-        class="px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+        class="p-2 text-gray-600 hover:text-blue-600 rounded-full hover:bg-blue-50 disabled:opacity-50 transition-colors"
         on:click={refreshBalances}
         disabled={isRefreshing}
+        title="Refresh Balances"
       >
-        {#if isRefreshing}
-          Refreshing...
-        {:else}
-          Refresh Balances
-        {/if}
+        <div class:animate-spin={isRefreshing}>
+          <RotateCw size={20} />
+        </div>
       </button>
     </div>
   </div>
