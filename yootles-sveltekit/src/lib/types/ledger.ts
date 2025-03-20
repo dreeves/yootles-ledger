@@ -2,8 +2,8 @@ export interface Account {
 	id: string;
 	name: string;
 	email: string;
-	balance: number;
-	interestAccrued: number;
+	balance?: number;
+	interestAccrued?: number;
 }
 
 export interface Transaction {

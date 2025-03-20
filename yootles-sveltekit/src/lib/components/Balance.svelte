@@ -94,7 +94,9 @@
 		class="grid auto-rows-fr grid-cols-1 gap-3 md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]"
 	>
 		{#each data.ledger.accounts as account (account.id)}
-			{@const principal = account.balance - account.interestAccrued}
+			{@const balance = account.balance ?? 0}
+			{@const interestAccrued = account.interestAccrued ?? 0}
+			{@const principal = balance - interestAccrued}
 			<div
 				class="rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:border-gray-300"
 			>
@@ -113,16 +115,16 @@
 						</span>
 					</div>
 
-					{#if account.interestAccrued !== 0}
+					{#if interestAccrued !== 0}
 						<div class="flex items-baseline justify-between text-sm">
 							<span class="text-gray-500">Interest:</span>
 							<div class="text-right">
-								<span class={account.interestAccrued >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
-									{formatCurrency(account.interestAccrued)}
+								<span class={interestAccrued >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
+									{formatCurrency(interestAccrued)}
 								</span>
 								{#if principal !== 0}
 									<span class="ml-1 text-xs text-gray-400">
-										({calculateInterestPercent(principal, account.interestAccrued)})
+										({calculateInterestPercent(principal, interestAccrued)})
 									</span>
 								{/if}
 							</div>
@@ -133,9 +135,9 @@
 						<div class="flex items-baseline justify-between">
 							<span class="font-medium text-gray-600">Total:</span>
 							<span
-								class={`font-medium ${account.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
+								class={`font-medium ${balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
 							>
-								{formatCurrency(account.balance)}
+								{formatCurrency(balance)}
 							</span>
 						</div>
 					</div>

@@ -18,7 +18,7 @@ export class LedgerProcessor {
 	private transactions: Transaction[] = [];
 	private interestRates: InterestRate[] = [];
 
-	parseAccount(line: string): Account | null {
+	parseAccount(line: string) {
 		const match = line.match(/account\[\s*(.*?)\s*,\s*"(.*?)"(?:\s*,\s*"(.*?)")?\s*\]/);
 		if (!match) return null;
 		return {

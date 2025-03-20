@@ -4,8 +4,10 @@ import type { Server } from 'http';
 import { createServer } from 'http';
 
 declare global {
-	const socketIoServer: ReturnType<typeof setupWebSocket>;
-	const httpServer: Server;
+	// eslint-disable-next-line no-var
+	var httpServer: Server | undefined;
+	// eslint-disable-next-line no-var
+	var socketIoServer: ReturnType<typeof setupWebSocket> | undefined;
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
