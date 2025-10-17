@@ -11,4 +11,5 @@ scp ledger.php      y:/var/www/html/yootles
 scp yootles.js      y:/var/www/html/yootles
 scp longpolling.php y:/var/www/html/yootles
 scp ledger.css      y:/var/www/html/yootles
+scp template-snapshot.txt y:/var/www/html/yootles 
 # TODO: probably .htaccess too

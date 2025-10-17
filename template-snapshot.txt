@@ -6,8 +6,8 @@ account[car,   "Carol",   "carol@yootles.com"]
 (* TRANSACTIONS, LATEST FIRST.  TEMPLATE: iou[YYYY.MM.DD, amt, from, to, why] *)
 (******************************************************************************)
 
-iou[1000, ali, bob, 2006.05.31, "this is alice transferring the $1000 back to bob again"]
-iou[1000, bob, ali, 2006.05.31, "transfer from bob to alice; maybe alice bought bob a bike"]
+iou[2006.05.31, 1000, ali, bob, "this is alice transferring the $1000 back to bob again"]
+iou[2006.05.31, 1000, bob, ali, "transfer from bob to alice; maybe alice bought bob a bike"]
 
 (******************************************************************************)
 (********************************** SETTINGS **********************************)

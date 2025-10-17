@@ -1,4 +1,4 @@
-#!/Applications/Mathematica.app/Contents/MacOS/MathKernel -script
+#!/Applications/Wolfram.app/Contents/MacOS/MathKernel -script
 (* SCHDEL /Applications/Mathematica.app/Contents/MacOS/MathematicaScript *)
 (* Takes (or fetches) a list of ledgers and updates all the individualized
 transaction histories. I generally cron this nightly from my laptop. *)
